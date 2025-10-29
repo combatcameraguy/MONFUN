@@ -30,6 +30,24 @@
         input[type="number"] {
             -moz-appearance: textfield;
         }
+        
+        /* Make calendar popups 2x larger */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            font-size: 2em;
+            cursor: pointer;
+        }
+        
+        /* Chrome/Edge calendar popup styling */
+        input[type="date"]::-webkit-datetime-edit {
+            padding: 0.5em;
+        }
+        
+        /* Make the calendar dropdown itself larger in supported browsers */
+        @media screen and (-webkit-min-device-pixel-ratio:0) {
+            input[type="date"] {
+                min-height: 2.5em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1725,11 +1743,13 @@
                                 type="date"
                                 value={task.requestDate}
                                 onChange={(e) => updateTask(task.id, 'requestDate', e.target.value)}
-                                className="border rounded px-2 py-1 text-sm hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full"
+                                className="border rounded px-3 py-2 text-base hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full"
                                 style={{
                                     borderColor: settings.darkMode ? '#4a4a4a' : '#e5e7eb',
                                     backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
-                                    color: theme.textPrimary
+                                    color: theme.textPrimary,
+                                    fontSize: '16px',
+                                    minHeight: '44px'
                                 }}
                             />
                         );
@@ -1739,11 +1759,13 @@
                                 type="date"
                                 value={task.dueDate}
                                 onChange={(e) => updateTask(task.id, 'dueDate', e.target.value)}
-                                className="border rounded px-2 py-1 text-sm hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full"
+                                className="border rounded px-3 py-2 text-base hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full"
                                 style={{
                                     borderColor: settings.darkMode ? '#4a4a4a' : '#e5e7eb',
                                     backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
-                                    color: theme.textPrimary
+                                    color: theme.textPrimary,
+                                    fontSize: '16px',
+                                    minHeight: '44px'
                                 }}
                             />
                         );
