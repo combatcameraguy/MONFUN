@@ -2487,12 +2487,15 @@
                                                                                 }
                                                                                 const actualHours = parseFloat(selectedTaskForMetrics.actualWorkHours) || 0;
                                                                                 return Math.max(3, Math.ceil((actualHours / 8) * 2.5));
-                                                                            })()} days
-                                                                            to maintain a {(() => {
+                                                                            })()} calendar days, giving you a {(() => {
                                                                                 const actualHours = parseFloat(selectedTaskForMetrics.actualWorkHours) || 0;
-                                                                                const invoiceHours = parseFloat(selectedTaskForMetrics.workHours) || 0;
-                                                                                return Math.max(1, Math.ceil((invoiceHours - actualHours) / 8));
-                                                                            })()} day buffer.
+                                                                                const actualWorkDays = Math.ceil(actualHours / 8);
+                                                                                // Calculate client timeline (use manual or auto-calculated)
+                                                                                const clientTimeline = selectedTaskForMetrics.timeline || Math.max(3, Math.ceil((actualHours / 8) * 2.5));
+                                                                                // Real buffer = client timeline - your actual work days
+                                                                                const realBuffer = clientTimeline - actualWorkDays;
+                                                                                return Math.max(0, realBuffer);
+                                                                            })()} day cushion for revisions, unexpected delays, or getting ahead on other projects.
                                                                         </p>
                                                                     </div>
                                                                 </div>
