@@ -1146,10 +1146,10 @@
                 return () => unsubscribe();
             }, []);
 
-            // Load data from Firebase when user logs in
+            // Load data from Firebase when user logs in - WITH REAL-TIME SYNC
             useEffect(() => {
                 if (user && database) {
-                    console.log('📥 Loading data from Firebase...');
+                    console.log('📥 Setting up real-time Firebase sync...');
                     setFirebaseSynced(false);
                     
                     let loadedCount = 0;
@@ -1159,74 +1159,79 @@
                         loadedCount++;
                         if (loadedCount === totalLoads) {
                             setFirebaseSynced(true);
-                            console.log('✅ All data synced with Firebase');
+                            console.log('✅ All data synced with Firebase - real-time updates active');
                         }
                     };
                     
-                    // Load tasks - ALWAYS overwrite with Firebase data
-                    database.ref('userData/tasks').once('value', (snapshot) => {
+                    // Real-time listener for tasks
+                    const tasksRef = database.ref('userData/tasks');
+                    const tasksListener = tasksRef.on('value', (snapshot) => {
                         const data = snapshot.val();
                         if (data && Array.isArray(data)) {
                             setTasks(data);
                             localStorage.setItem('comcam_tasks', JSON.stringify(data));
-                            console.log('✅ Tasks loaded from Firebase:', data.length, 'tasks');
-                        } else {
-                            console.log('⚠️ No tasks in Firebase, using local data');
+                            console.log('🔄 Tasks updated from Firebase:', data.length, 'tasks');
                         }
-                        checkAllLoaded();
+                        if (loadedCount < totalLoads) checkAllLoaded();
                     });
 
-                    // Load column widths - ALWAYS overwrite with Firebase data
-                    database.ref('userData/columnWidths').once('value', (snapshot) => {
+                    // Real-time listener for column widths
+                    const widthsRef = database.ref('userData/columnWidths');
+                    const widthsListener = widthsRef.on('value', (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
                             setColumnWidths(data);
                             localStorage.setItem('comcam_columnWidths_v2', JSON.stringify(data));
-                            console.log('✅ Column widths loaded from Firebase');
-                        } else {
-                            console.log('⚠️ No column widths in Firebase, using local data');
+                            console.log('🔄 Column widths updated from Firebase');
                         }
-                        checkAllLoaded();
+                        if (loadedCount < totalLoads) checkAllLoaded();
                     });
 
-                    // Load column order - ALWAYS overwrite with Firebase data
-                    database.ref('userData/columnOrder').once('value', (snapshot) => {
+                    // Real-time listener for column order
+                    const orderRef = database.ref('userData/columnOrder');
+                    const orderListener = orderRef.on('value', (snapshot) => {
                         const data = snapshot.val();
                         if (data && Array.isArray(data)) {
                             setColumnOrder(data);
                             localStorage.setItem('comcam_columnOrder_v2', JSON.stringify(data));
-                            console.log('✅ Column order loaded from Firebase');
-                        } else {
-                            console.log('⚠️ No column order in Firebase, using local data');
+                            console.log('🔄 Column order updated from Firebase');
                         }
-                        checkAllLoaded();
+                        if (loadedCount < totalLoads) checkAllLoaded();
                     });
 
-                    // Load expanded groups - ALWAYS overwrite with Firebase data
-                    database.ref('userData/expandedGroups').once('value', (snapshot) => {
+                    // Real-time listener for expanded groups
+                    const groupsRef = database.ref('userData/expandedGroups');
+                    const groupsListener = groupsRef.on('value', (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
                             setExpandedGroups(data);
                             localStorage.setItem('comcam_expandedGroups', JSON.stringify(data));
-                            console.log('✅ Expanded groups loaded from Firebase');
-                        } else {
-                            console.log('⚠️ No expanded groups in Firebase, using local data');
+                            console.log('🔄 Expanded groups updated from Firebase');
                         }
-                        checkAllLoaded();
+                        if (loadedCount < totalLoads) checkAllLoaded();
                     });
 
-                    // Load settings - ALWAYS overwrite with Firebase data
-                    database.ref('userData/settings').once('value', (snapshot) => {
+                    // Real-time listener for settings
+                    const settingsRef = database.ref('userData/settings');
+                    const settingsListener = settingsRef.on('value', (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
                             setSettings(data);
                             localStorage.setItem('comcam_settings', JSON.stringify(data));
-                            console.log('✅ Settings loaded from Firebase:', data);
-                        } else {
-                            console.log('⚠️ No settings in Firebase, using local data');
+                            console.log('🔄 Settings updated from Firebase:', data);
                         }
-                        checkAllLoaded();
+                        if (loadedCount < totalLoads) checkAllLoaded();
                     });
+                    
+                    // Cleanup: Remove listeners when component unmounts or user logs out
+                    return () => {
+                        console.log('🔌 Disconnecting Firebase real-time listeners');
+                        tasksRef.off('value', tasksListener);
+                        widthsRef.off('value', widthsListener);
+                        orderRef.off('value', orderListener);
+                        groupsRef.off('value', groupsListener);
+                        settingsRef.off('value', settingsListener);
+                    };
                 }
             }, [user]);
 
