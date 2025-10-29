@@ -48,6 +48,70 @@
                 min-height: 2.5em;
             }
         }
+        
+        /* Ensure editable text inherits color from row */
+        tbody tr td > div {
+            color: inherit;
+        }
+        
+        /* Smooth, slow, elegant slide down animation */
+        @keyframes slideDown {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+                max-height: 0;
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                max-height: 600px;
+            }
+        }
+        
+        /* Fade in animation for individual buttons */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        /* Row expansion with ultra-smooth, luxurious 2-second transitions */
+        tbody tr {
+            transition: all 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* Expanded row styling */
+        tbody tr.calendar-expanded {
+            background: linear-gradient(to right, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04)) !important;
+            box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        
+        tbody tr.calendar-expanded td {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+            vertical-align: top !important;
+            transition: padding 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* Make cells take full width when expanded */
+        tbody tr.calendar-expanded td > div {
+            width: 100%;
+        }
+        
+        /* Ultra-smooth 2-second chevron rotation with bounce */
+        .chevron-rotate {
+            transition: transform 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
     </style>
 </head>
 <body>
@@ -77,24 +141,9 @@
         const EyeOff = ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>;
         const Lock = ({ size = 64 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
 
-        // ========== LARGE CUSTOM CALENDAR COMPONENT ==========
-        const LargeCalendar = ({ value, onChange, darkMode }) => {
-            const [isOpen, setIsOpen] = useState(false);
+        // ========== INLINE EXPANDING CALENDAR COMPONENT ==========
+        const InlineCalendar = ({ value, onChange, darkMode, onToggle, isExpanded }) => {
             const [currentMonth, setCurrentMonth] = useState(new Date(value || new Date()));
-            const calendarRef = useRef(null);
-
-            // Close calendar when clicking outside
-            useEffect(() => {
-                const handleClickOutside = (e) => {
-                    if (calendarRef.current && !calendarRef.current.contains(e.target)) {
-                        setIsOpen(false);
-                    }
-                };
-                if (isOpen) {
-                    document.addEventListener('mousedown', handleClickOutside);
-                    return () => document.removeEventListener('mousedown', handleClickOutside);
-                }
-            }, [isOpen]);
 
             const formatDisplayDate = (dateStr) => {
                 if (!dateStr) return 'Select date';
@@ -111,11 +160,9 @@
                 const startingDayOfWeek = firstDay.getDay();
                 
                 const days = [];
-                // Add empty cells for days before month starts
                 for (let i = 0; i < startingDayOfWeek; i++) {
                     days.push(null);
                 }
-                // Add actual days
                 for (let i = 1; i <= daysInMonth; i++) {
                     days.push(i);
                 }
@@ -128,7 +175,7 @@
                     const month = currentMonth.getMonth();
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     onChange(dateStr);
-                    setIsOpen(false);
+                    onToggle();
                 }
             };
 
@@ -141,39 +188,43 @@
             const selectedDate = value ? new Date(value + 'T00:00:00') : null;
 
             return (
-                <div ref={calendarRef} className="relative">
+                <div className="w-full">
                     <button
                         type="button"
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="border rounded px-2 py-1 text-sm hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full text-left flex items-center justify-between"
+                        onClick={onToggle}
+                        className="border rounded px-3 py-2 text-sm hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full text-left flex items-center justify-between"
                         style={{
-                            borderColor: darkMode ? '#4a4a4a' : '#e5e7eb',
+                            borderColor: isExpanded ? '#3b82f6' : (darkMode ? '#4a4a4a' : '#e5e7eb'),
                             backgroundColor: darkMode ? '#3a3a3a' : '#ffffff',
                             color: darkMode ? '#ffffff' : '#000000',
-                            fontSize: '13px',
-                            minHeight: '32px'
+                            fontSize: '14px',
+                            minHeight: '38px',
+                            boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                            transition: 'all 2s ease'
                         }}
                     >
-                        <span>{formatDisplayDate(value)}</span>
-                        <Calendar size={16} />
+                        <span className="font-medium">{formatDisplayDate(value)}</span>
+                        <div className="chevron-rotate" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                            <ChevronDown />
+                        </div>
                     </button>
 
-                    {isOpen && (
+                    {isExpanded && (
                         <div 
-                            className="absolute z-50 mt-2 rounded-lg shadow-2xl border-2"
+                            className="mt-3 rounded-lg shadow-xl border-2"
                             style={{
                                 backgroundColor: darkMode ? '#2a2a2a' : '#ffffff',
-                                borderColor: darkMode ? '#4a4a4a' : '#e5e7eb',
-                                width: '420px',
-                                padding: '20px'
+                                borderColor: '#3b82f6',
+                                padding: '16px',
+                                width: '360px',
+                                animation: 'slideDown 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
                             }}
                         >
-                            {/* Header */}
                             <div className="flex items-center justify-between mb-4">
                                 <button
                                     type="button"
                                     onClick={() => changeMonth(-1)}
-                                    className="p-2 rounded hover:bg-gray-200"
+                                    className="p-2 rounded-lg hover:scale-110 transition-transform font-bold text-xl"
                                     style={{
                                         backgroundColor: darkMode ? '#3a3a3a' : '#f3f4f6',
                                         color: darkMode ? '#ffffff' : '#000000'
@@ -187,7 +238,7 @@
                                 <button
                                     type="button"
                                     onClick={() => changeMonth(1)}
-                                    className="p-2 rounded hover:bg-gray-200"
+                                    className="p-2 rounded-lg hover:scale-110 transition-transform font-bold text-xl"
                                     style={{
                                         backgroundColor: darkMode ? '#3a3a3a' : '#f3f4f6',
                                         color: darkMode ? '#ffffff' : '#000000'
@@ -197,17 +248,15 @@
                                 </button>
                             </div>
 
-                            {/* Day labels */}
-                            <div className="grid grid-cols-7 gap-2 mb-2">
+                            <div className="grid grid-cols-7 gap-1 mb-2">
                                 {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                                    <div key={day} className="text-center font-semibold text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                                    <div key={day} className="text-center font-bold text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                                         {day}
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Days grid */}
-                            <div className="grid grid-cols-7 gap-2">
+                            <div className="grid grid-cols-7 gap-1">
                                 {days.map((day, idx) => {
                                     if (!day) {
                                         return <div key={idx} />;
@@ -223,14 +272,14 @@
                                             key={idx}
                                             type="button"
                                             onClick={() => handleDayClick(day)}
-                                            className="rounded-lg text-lg font-medium transition-all hover:scale-110"
+                                            className="rounded-lg text-sm font-semibold transition-all duration-2000 hover:scale-110 hover:shadow-md"
                                             style={{
-                                                padding: '12px',
+                                                padding: '8px',
                                                 backgroundColor: isSelected 
                                                     ? '#3b82f6' 
                                                     : darkMode ? '#3a3a3a' : '#f9fafb',
                                                 color: isSelected ? '#ffffff' : darkMode ? '#ffffff' : '#000000',
-                                                border: isSelected ? '2px solid #2563eb' : '1px solid transparent'
+                                                border: isSelected ? '2px solid #2563eb' : '1px solid ' + (darkMode ? '#4a4a4a' : '#e5e7eb')
                                             }}
                                         >
                                             {day}
@@ -269,6 +318,24 @@
         } catch (error) {
             console.error('❌ Firebase initialization error:', error);
         }
+
+        // ========== COLOR CONTRAST HELPER ==========
+        // Function to determine if text should be white or dark based on background color
+        const getTextColor = (bgColor) => {
+            // Remove # if present
+            const hex = bgColor.replace('#', '');
+            
+            // Convert to RGB
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            // Calculate relative luminance
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            
+            // Return white for dark backgrounds, dark for light backgrounds
+            return luminance > 0.5 ? '#1f2937' : '#ffffff';
+        };
 
         // ========== COLOR THEMES ==========
         const colorThemes = {
@@ -375,7 +442,7 @@
                 primary: '#283F3B',      // Dark teal-gray
                 secondary: '#99DDC8',    // Mint green
                 accent: '#95BF74',       // Light olive
-                highlight: '#6599B5E',   // Medium green
+                highlight: '#6B8E23',    // Olive Drab green (darker for better contrast)
                 dark: '#283F3B',         // Dark teal-gray
                 textPrimary: '#1f2937',
                 textSecondary: '#6b7280'
@@ -426,6 +493,21 @@
             const [isLoadingRequests, setIsLoadingRequests] = useState(false);
             const [apiConnected, setApiConnected] = useState(false);
             const [selectedTaskForMetrics, setSelectedTaskForMetrics] = useState(null);
+            const [showCustomThemeCreator, setShowCustomThemeCreator] = useState(false);
+            const [customThemeNames, setCustomThemeNames] = useState([]);
+            const [expandedDropdown, setExpandedDropdown] = useState(null); // Track which dropdown/calendar is expanded
+            const [customTheme, setCustomTheme] = useState({
+                name: '',
+                background: '#ffffff',
+                cardBg: '#ffffff',
+                primary: '#3b82f6',
+                secondary: '#8b5cf6',
+                accent: '#10b981',
+                highlight: '#f59e0b',
+                dark: '#1f2937',
+                textPrimary: '#1f2937',
+                textSecondary: '#6b7280'
+            });
             const fileInputRef = useRef(null);
             
             const initialWidths = {
@@ -632,7 +714,7 @@
                 colorTheme: 'None',
                 darkMode: false
             }));
-            const [showDashboardTotal, setShowDashboardTotal] = useState(true);
+            const [showDashboardTotal, setShowDashboardTotal] = useState(false);
             
             const [resizingColumn, setResizingColumn] = useState(null);
             const resizeStartX = useRef(0);
@@ -1731,7 +1813,7 @@
                             className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none"
                             style={{
                                 backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
-                                color: theme.textPrimary
+                                color: settings.darkMode ? '#ffffff' : '#1f2937'
                             }}
                             autoFocus
                         />
@@ -1742,41 +1824,49 @@
                     <div
                         onClick={() => setIsEditing(true)}
                         className="cursor-pointer px-2 py-1 rounded min-h-[24px]"
-                        style={{
-                            color: theme.textPrimary
-                        }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = settings.darkMode ? '#3a3a3a' : '#f9fafb'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                        {value || <span className="italic" style={{ color: theme.textSecondary }}>Click to edit</span>}
+                        {value || <span className="italic opacity-60">Click to edit</span>}
                     </div>
                 );
             };
 
-            const StatusCell = ({ status, taskId }) => {
-                const [isOpen, setIsOpen] = useState(false);
+            const StatusCell = ({ status, taskId, isExpanded, onToggle }) => {
                 const options = ['Working on it', 'Done', 'Stuck', 'Not started'];
 
                 return (
-                    <div className="relative">
+                    <div className="w-full">
                         <button
-                            onClick={() => setIsOpen(!isOpen)}
-                            style={{ backgroundColor: statusColors[status] }}
-                            className="text-white px-3 py-1 rounded-full text-sm font-medium hover:opacity-90 transition-opacity w-full text-left"
+                            onClick={onToggle}
+                            style={{ 
+                                backgroundColor: statusColors[status],
+                                boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                                transition: 'all 2s ease'
+                            }}
+                            className="text-white px-3 py-2 rounded-full text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
                         >
-                            {status}
+                            <span>{status}</span>
+                            <div className="chevron-rotate" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                                <ChevronDown />
+                            </div>
                         </button>
-                        {isOpen && (
-                            <div className="absolute z-10 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[150px]">
+                        {isExpanded && (
+                            <div className="mt-3 rounded-lg shadow-xl border-2 p-2 space-y-2" style={{
+                                borderColor: '#3b82f6',
+                                backgroundColor: settings.darkMode ? '#2a2a2a' : '#ffffff',
+                                animation: 'slideDown 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                                width: '200px'
+                            }}>
                                 {options.map(option => (
                                     <button
                                         key={option}
                                         onClick={() => {
                                             updateTask(taskId, 'status', option);
-                                            setIsOpen(false);
+                                            onToggle();
                                         }}
                                         style={{ backgroundColor: statusColors[option] }}
-                                        className="text-white px-3 py-2 w-full text-left text-sm hover:opacity-90 first:rounded-t-lg last:rounded-b-lg"
+                                        className="text-white px-4 py-3 w-full text-left text-sm font-semibold rounded-lg hover:scale-105 hover:shadow-lg transition-all duration-2000"
                                     >
                                         {option}
                                     </button>
@@ -1787,9 +1877,8 @@
                 );
             };
 
-            const PriorityCell = ({ priority, taskId, task }) => {
-                const [isOpen, setIsOpen] = useState(false);
-                const options = ['High', 'Standard'];
+            const PriorityCell = ({ priority, taskId, task, isExpanded, onToggle }) => {
+                const options = ['Standard', 'High'];
                 
                 const shouldShowWarning = () => {
                     if (!settings.dueDateWarning || !task.dueDate) return false;
@@ -1805,25 +1894,40 @@
                 const displayColor = shouldShowWarning() ? '#ff7575' : priorityColors[priority];
 
                 return (
-                    <div className="relative">
+                    <div className="w-full">
                         <button
-                            onClick={() => setIsOpen(!isOpen)}
-                            style={{ backgroundColor: displayColor }}
-                            className="text-gray-800 px-3 py-1 rounded text-sm font-medium hover:opacity-90 transition-opacity w-full text-left"
+                            onClick={onToggle}
+                            style={{ 
+                                backgroundColor: displayColor,
+                                boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                                transition: 'all 2s ease'
+                            }}
+                            className="text-gray-800 px-3 py-2 rounded text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
                         >
-                            {priority}
+                            <span>{priority}</span>
+                            <div className="chevron-rotate" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                                <ChevronDown />
+                            </div>
                         </button>
-                        {isOpen && (
-                            <div className="absolute z-10 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[120px]">
-                                {options.map(option => (
+                        {isExpanded && (
+                            <div className="mt-3 rounded-lg shadow-xl border-2 p-3 space-y-3" style={{
+                                borderColor: '#3b82f6',
+                                backgroundColor: settings.darkMode ? '#2a2a2a' : '#ffffff',
+                                animation: 'slideDown 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                                width: '200px'
+                            }}>
+                                {options.map((option, index) => (
                                     <button
                                         key={option}
                                         onClick={() => {
                                             updateTask(taskId, 'priority', option);
-                                            setIsOpen(false);
+                                            onToggle();
                                         }}
-                                        style={{ backgroundColor: priorityColors[option] }}
-                                        className="text-gray-800 px-3 py-2 w-full text-left text-sm hover:opacity-90 first:rounded-t-lg last:rounded-b-lg"
+                                        style={{ 
+                                            backgroundColor: priorityColors[option],
+                                            animationDelay: `${index * 0.4}s`
+                                        }}
+                                        className="text-gray-800 px-5 py-4 w-full text-left text-base font-bold rounded-lg hover:scale-110 hover:shadow-2xl transition-all duration-2000 animate-fade-in"
                                     >
                                         {option}
                                     </button>
@@ -1834,8 +1938,7 @@
                 );
             };
 
-            const ClientTypeCell = ({ clientType, taskId }) => {
-                const [isOpen, setIsOpen] = useState(false);
+            const ClientTypeCell = ({ clientType, taskId, isExpanded, onToggle }) => {
                 const options = [
                     'Commercial/Local Business',
                     'Out of State Commercial (+30%)',
@@ -1847,25 +1950,37 @@
                 ];
 
                 return (
-                    <div className="relative">
+                    <div className="w-full">
                         <button
-                            onClick={() => setIsOpen(!isOpen)}
-                            style={{ backgroundColor: clientTypeColors[clientType] || '#81b6e3' }}
-                            className="text-gray-800 px-3 py-1 rounded text-sm font-medium hover:opacity-90 transition-opacity w-full text-left"
+                            onClick={onToggle}
+                            style={{ 
+                                backgroundColor: clientTypeColors[clientType] || '#81b6e3',
+                                boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                                transition: 'all 2s ease'
+                            }}
+                            className="text-gray-800 px-3 py-2 rounded text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
                         >
-                            {clientType || 'Commercial/Local Business'}
+                            <span className="truncate">{clientType || 'Commercial/Local Business'}</span>
+                            <div className="chevron-rotate flex-shrink-0" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                                <ChevronDown />
+                            </div>
                         </button>
-                        {isOpen && (
-                            <div className="absolute z-10 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[220px] max-h-64 overflow-y-auto">
+                        {isExpanded && (
+                            <div className="mt-3 rounded-lg shadow-xl border-2 p-2 space-y-2 max-h-80 overflow-y-auto" style={{
+                                borderColor: '#3b82f6',
+                                backgroundColor: settings.darkMode ? '#2a2a2a' : '#ffffff',
+                                animation: 'slideDown 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                                width: '280px'
+                            }}>
                                 {options.map(option => (
                                     <button
                                         key={option}
                                         onClick={() => {
                                             updateTask(taskId, 'clientType', option);
-                                            setIsOpen(false);
+                                            onToggle();
                                         }}
                                         style={{ backgroundColor: clientTypeColors[option] }}
-                                        className="text-gray-800 px-3 py-2 w-full text-left text-sm hover:opacity-90 first:rounded-t-lg last:rounded-b-lg"
+                                        className="text-gray-800 px-4 py-3 w-full text-left text-sm font-semibold rounded-lg hover:scale-105 hover:shadow-lg transition-all duration-2000"
                                     >
                                         {option}
                                     </button>
@@ -1899,25 +2014,61 @@
                             </div>
                         );
                     case 'status':
-                        return <StatusCell status={task.status} taskId={task.id} />;
+                        return (
+                            <StatusCell 
+                                status={task.status} 
+                                taskId={task.id}
+                                isExpanded={expandedDropdown === `${task.id}-status`}
+                                onToggle={() => setExpandedDropdown(
+                                    expandedDropdown === `${task.id}-status` ? null : `${task.id}-status`
+                                )}
+                            />
+                        );
                     case 'priority':
-                        return <PriorityCell priority={task.priority} taskId={task.id} task={task} />;
+                        return (
+                            <PriorityCell 
+                                priority={task.priority} 
+                                taskId={task.id} 
+                                task={task}
+                                isExpanded={expandedDropdown === `${task.id}-priority`}
+                                onToggle={() => setExpandedDropdown(
+                                    expandedDropdown === `${task.id}-priority` ? null : `${task.id}-priority`
+                                )}
+                            />
+                        );
                     case 'clientType':
-                        return <ClientTypeCell clientType={task.clientType} taskId={task.id} />;
+                        return (
+                            <ClientTypeCell 
+                                clientType={task.clientType} 
+                                taskId={task.id}
+                                isExpanded={expandedDropdown === `${task.id}-clientType`}
+                                onToggle={() => setExpandedDropdown(
+                                    expandedDropdown === `${task.id}-clientType` ? null : `${task.id}-clientType`
+                                )}
+                            />
+                        );
                     case 'requestDate':
                         return (
-                            <LargeCalendar 
+                            <InlineCalendar 
                                 value={task.requestDate}
                                 onChange={(dateStr) => updateTask(task.id, 'requestDate', dateStr)}
                                 darkMode={settings.darkMode}
+                                isExpanded={expandedDropdown === `${task.id}-requestDate`}
+                                onToggle={() => setExpandedDropdown(
+                                    expandedDropdown === `${task.id}-requestDate` ? null : `${task.id}-requestDate`
+                                )}
                             />
                         );
                     case 'dueDate':
                         return (
-                            <LargeCalendar 
+                            <InlineCalendar 
                                 value={task.dueDate}
                                 onChange={(dateStr) => updateTask(task.id, 'dueDate', dateStr)}
                                 darkMode={settings.darkMode}
+                                isExpanded={expandedDropdown === `${task.id}-dueDate`}
+                                onToggle={() => setExpandedDropdown(
+                                    expandedDropdown === `${task.id}-dueDate` ? null : `${task.id}-dueDate`
+                                )}
                             />
                         );
                     case 'actualWorkHours':
@@ -1930,7 +2081,7 @@
                                 style={{
                                     borderColor: settings.darkMode ? '#4a4a4a' : '#e5e7eb',
                                     backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
-                                    color: theme.textPrimary
+                                    color: settings.darkMode ? '#ffffff' : '#1f2937'
                                 }}
                                 min="0"
                                 step="0.5"
@@ -2026,7 +2177,7 @@
             };
 
             const GroupHeader = ({ title, groupId, count, bgColor }) => (
-                <div className="text-white px-4 py-3 flex items-center justify-between rounded-lg mb-2 shadow-sm" style={{ backgroundColor: bgColor }}>
+                <div className="px-4 py-3 flex items-center justify-between rounded-lg mb-2 shadow-sm" style={{ backgroundColor: bgColor, color: getTextColor(bgColor) }}>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => toggleGroup(groupId)}
@@ -2230,6 +2381,8 @@
                                                         }}>
                                                             {columnOrder.map((columnKey) => {
                                                                 const column = columns[columnKey];
+                                                                const headerBg = settings.darkMode ? '#3a3a3a' : '#f9fafb';
+                                                                const headerTextColor = getTextColor(headerBg);
                                                                 return (
                                                                     <th
                                                                         key={columnKey}
@@ -2239,7 +2392,7 @@
                                                                         onDragEnd={handleColumnDragEnd}
                                                                         style={{ 
                                                                             minWidth: `${columnWidths[columnKey]}px`,
-                                                                            color: theme.textPrimary
+                                                                            color: headerTextColor
                                                                         }}
                                                                         className={`px-4 py-3 text-left text-sm font-semibold relative ${
                                                                             columnKey !== 'actions' && columnKey !== 'metrics' ? 'cursor-move transition-colors' : 'text-center'
@@ -2290,6 +2443,11 @@
                                                             const evenRowBg = settings.darkMode ? '#3a3a3a' : theme.background;
                                                             const oddRowBg = settings.darkMode ? '#2e2e2e' : (theme.cardBg || theme.background);
                                                             const hoverBg = settings.darkMode ? theme.accent + '40' : theme.accent + '30';
+                                                            const currentRowBg = index % 2 === 0 ? evenRowBg : oddRowBg;
+                                                            const textColor = getTextColor(currentRowBg);
+                                                            
+                                                            // Check if this row has an expanded dropdown/calendar
+                                                            const hasExpanded = expandedDropdown?.startsWith(`${task.id}-`);
                                                             
                                                             return (
                                                                 <tr 
@@ -2301,24 +2459,27 @@
                                                                     onDragLeave={handleDragLeave}
                                                                     onDrop={(e) => handleDrop(e, task)}
                                                                     style={{
-                                                                        backgroundColor: index % 2 === 0 ? evenRowBg : oddRowBg,
-                                                                        transition: 'background-color 0.15s ease'
+                                                                        backgroundColor: currentRowBg,
+                                                                        color: textColor,
+                                                                        transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
                                                                     }}
-                                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBg}
-                                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? evenRowBg : oddRowBg}
+                                                                    onMouseEnter={(e) => !hasExpanded && (e.currentTarget.style.backgroundColor = hoverBg)}
+                                                                    onMouseLeave={(e) => !hasExpanded && (e.currentTarget.style.backgroundColor = currentRowBg)}
                                                                     className={`border-b cursor-move ${
                                                                         dragOverTask?.id === task.id ? 'border-t-4 border-t-blue-500' : ''
                                                                     } ${
                                                                         draggedTask?.id === task.id ? 'opacity-50' : ''
                                                                     } ${
                                                                         settings.darkMode ? 'border-gray-700' : 'border-gray-200'
+                                                                    } ${
+                                                                        hasExpanded ? 'calendar-expanded' : ''
                                                                     }`}
                                                                 >
                                                                 {columnOrder.map((columnKey) => (
                                                                     <td 
                                                                         key={columnKey} 
-                                                                        style={{ minWidth: `${columnWidths[columnKey]}px` }}
-                                                                        className={`px-4 py-3 align-top ${(columnKey === 'actions' || columnKey === 'metrics') ? 'text-center' : 'text-gray-700'}`}
+                                                                        style={{ minWidth: `${columnWidths[columnKey]}px`, color: textColor }}
+                                                                        className={`px-4 py-3 align-top ${(columnKey === 'actions' || columnKey === 'metrics') ? 'text-center' : ''}`}
                                                                     >
                                                                         {renderCell(columnKey, task)}
                                                                     </td>
@@ -2332,21 +2493,23 @@
                                         )}
                                         
                                         {expandedGroups[groupId] && groupId === 'group1' && (
-                                            <button 
-                                                onClick={() => addTask(groupId)}
-                                                className="w-full py-3 text-left px-4 text-gray-500 hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium"
-                                            >
-                                                <Plus size={16} />
-                                                Add new item
-                                            </button>
+                                            <div className="px-4 py-2">
+                                                <button 
+                                                    onClick={() => addTask(groupId)}
+                                                    className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-semibold shadow-md hover:shadow-lg"
+                                                >
+                                                    <Plus size={16} />
+                                                    Add new item
+                                                </button>
+                                            </div>
                                         )}
                                         
                                         {groupId === 'group2' && (
                                             <div style={{ background: `linear-gradient(135deg, ${theme.secondary}15 0%, ${theme.accent}15 100%)` }} className="border-t-4 px-8 py-8" style={{ borderTopColor: theme.primary }}>
                                                 {selectedTaskForMetrics ? (
-                                                    // Split layout with metrics on left and dashboard total on right
-                                                    <div className="grid grid-cols-2 gap-8">
-                                                        {/* Metrics Panel - Left Side */}
+                                                    // Split layout with metrics on left and dashboard total on right (when shown)
+                                                    <div className={`grid gap-8 ${showDashboardTotal ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                                        {/* Metrics Panel - Left Side (or Full Width when Dashboard Total is hidden) */}
                                                         <div className="rounded-xl shadow-2xl p-8" style={{ 
                                                             background: `linear-gradient(135deg, ${theme.primary}15 0%, ${theme.accent}25 100%)`,
                                                             border: `3px solid ${theme.primary}`,
@@ -2777,33 +2940,188 @@
                                                     <div className="space-y-2 max-h-64 overflow-y-auto">
                                                         {Object.keys(colorThemes).filter(name => name !== 'None').map(themeName => {
                                                             const themeColors = colorThemes[themeName];
+                                                            const isCustom = customThemeNames.includes(themeName);
                                                             return (
-                                                                <button
-                                                                    key={themeName}
-                                                                    onClick={() => setSettings({ ...settings, colorTheme: themeName })}
-                                                                    className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
-                                                                        settings.colorTheme === themeName 
-                                                                            ? 'border-blue-500 bg-blue-50' 
-                                                                            : 'border-gray-200 hover:border-gray-300 bg-white'
-                                                                    }`}
-                                                                >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="flex gap-1">
-                                                                            <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.primary }}></div>
-                                                                            <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.secondary }}></div>
-                                                                            <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.accent }}></div>
-                                                                            <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.highlight }}></div>
-                                                                            <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.dark }}></div>
+                                                                <div key={themeName} className="relative">
+                                                                    <button
+                                                                        onClick={() => setSettings({ ...settings, colorTheme: themeName })}
+                                                                        className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+                                                                            settings.colorTheme === themeName 
+                                                                                ? 'border-blue-500 bg-blue-50' 
+                                                                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                                        }`}
+                                                                    >
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="flex gap-1">
+                                                                                <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.primary }}></div>
+                                                                                <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.secondary }}></div>
+                                                                                <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.accent }}></div>
+                                                                                <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.highlight }}></div>
+                                                                                <div className="w-6 h-6 rounded" style={{ backgroundColor: themeColors.dark }}></div>
+                                                                            </div>
+                                                                            <span className="font-medium text-gray-900">{themeName}</span>
+                                                                            {isCustom && (
+                                                                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-semibold">Custom</span>
+                                                                            )}
                                                                         </div>
-                                                                        <span className="font-medium text-gray-900">{themeName}</span>
-                                                                    </div>
-                                                                    {settings.colorTheme === themeName && (
-                                                                        <div className="text-blue-600 font-bold">✓</div>
-                                                                    )}
-                                                                </button>
+                                                                        <div className="flex items-center gap-2">
+                                                                            {settings.colorTheme === themeName && (
+                                                                                <div className="text-blue-600 font-bold">✓</div>
+                                                                            )}
+                                                                            {isCustom && (
+                                                                                <button
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        if (confirm(`Delete custom theme "${themeName}"?`)) {
+                                                                                            // Remove from colorThemes
+                                                                                            delete colorThemes[themeName];
+                                                                                            // Remove from custom theme names
+                                                                                            setCustomThemeNames(prev => prev.filter(n => n !== themeName));
+                                                                                            // If this was the active theme, switch to default
+                                                                                            if (settings.colorTheme === themeName) {
+                                                                                                setSettings({ ...settings, colorTheme: 'Cherry Blossom' });
+                                                                                            }
+                                                                                            alert(`🗑️ Theme "${themeName}" deleted!`);
+                                                                                        }
+                                                                                    }}
+                                                                                    className="p-1.5 hover:bg-red-100 rounded transition-colors text-red-600"
+                                                                                    title="Delete this theme"
+                                                                                >
+                                                                                    <Trash2 size={16} />
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </button>
+                                                                </div>
                                                             );
                                                         })}
                                                     </div>
+                                                    
+                                                    {/* Custom Theme Creator Button */}
+                                                    <button
+                                                        onClick={() => setShowCustomThemeCreator(!showCustomThemeCreator)}
+                                                        className="w-full mt-3 py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                                                    >
+                                                        <Plus size={18} />
+                                                        {showCustomThemeCreator ? 'Hide Theme Creator' : 'Create Custom Theme'}
+                                                    </button>
+                                                    
+                                                    {/* Custom Theme Creator Form */}
+                                                    {showCustomThemeCreator && (
+                                                        <div className="mt-4 p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border-2 border-purple-300">
+                                                            <h5 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                                                <span className="text-xl">🎨</span>
+                                                                Custom Theme Creator
+                                                            </h5>
+                                                            <div className="space-y-3">
+                                                                <div>
+                                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Theme Name</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={customTheme.name}
+                                                                        onChange={(e) => setCustomTheme({ ...customTheme, name: e.target.value })}
+                                                                        placeholder="My Awesome Theme"
+                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                                    />
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Background</label>
+                                                                        <input
+                                                                            type="color"
+                                                                            value={customTheme.background}
+                                                                            onChange={(e) => setCustomTheme({ ...customTheme, background: e.target.value })}
+                                                                            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Card Background</label>
+                                                                        <input
+                                                                            type="color"
+                                                                            value={customTheme.cardBg}
+                                                                            onChange={(e) => setCustomTheme({ ...customTheme, cardBg: e.target.value })}
+                                                                            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Primary</label>
+                                                                        <input
+                                                                            type="color"
+                                                                            value={customTheme.primary}
+                                                                            onChange={(e) => setCustomTheme({ ...customTheme, primary: e.target.value })}
+                                                                            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Secondary</label>
+                                                                        <input
+                                                                            type="color"
+                                                                            value={customTheme.secondary}
+                                                                            onChange={(e) => setCustomTheme({ ...customTheme, secondary: e.target.value })}
+                                                                            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Accent (INBOX)</label>
+                                                                        <input
+                                                                            type="color"
+                                                                            value={customTheme.accent}
+                                                                            onChange={(e) => setCustomTheme({ ...customTheme, accent: e.target.value })}
+                                                                            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Highlight (COMPLETED)</label>
+                                                                        <input
+                                                                            type="color"
+                                                                            value={customTheme.highlight}
+                                                                            onChange={(e) => setCustomTheme({ ...customTheme, highlight: e.target.value })}
+                                                                            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (!customTheme.name.trim()) {
+                                                                            alert('Please enter a theme name!');
+                                                                            return;
+                                                                        }
+                                                                        // Check if theme name already exists
+                                                                        if (colorThemes[customTheme.name]) {
+                                                                            alert('⚠️ A theme with this name already exists! Please choose a different name.');
+                                                                            return;
+                                                                        }
+                                                                        // Add the custom theme to colorThemes
+                                                                        colorThemes[customTheme.name] = { ...customTheme };
+                                                                        // Add to custom theme names list
+                                                                        setCustomThemeNames(prev => [...prev, customTheme.name]);
+                                                                        // Set it as the active theme
+                                                                        setSettings({ ...settings, colorTheme: customTheme.name });
+                                                                        // Store the theme name for later reference
+                                                                        const themeName = customTheme.name;
+                                                                        // Reset the form
+                                                                        setCustomTheme({
+                                                                            name: '',
+                                                                            background: '#ffffff',
+                                                                            cardBg: '#ffffff',
+                                                                            primary: '#3b82f6',
+                                                                            secondary: '#8b5cf6',
+                                                                            accent: '#10b981',
+                                                                            highlight: '#f59e0b',
+                                                                            dark: '#1f2937',
+                                                                            textPrimary: '#1f2937',
+                                                                            textSecondary: '#6b7280'
+                                                                        });
+                                                                        setShowCustomThemeCreator(false);
+                                                                        alert(`🎨 Theme "${themeName}" created and activated!`);
+                                                                    }}
+                                                                    className="w-full py-2 px-4 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-lg font-bold transition-all"
+                                                                >
+                                                                    ✨ Create & Apply Theme
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
