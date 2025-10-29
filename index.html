@@ -227,6 +227,7 @@
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
             const [authError, setAuthError] = useState('');
+            const [firebaseSynced, setFirebaseSynced] = useState(false);
             
             const [draggedTask, setDraggedTask] = useState(null);
             const [dragOverTask, setDragOverTask] = useState(null);
@@ -1149,6 +1150,18 @@
             useEffect(() => {
                 if (user && database) {
                     console.log('📥 Loading data from Firebase...');
+                    setFirebaseSynced(false);
+                    
+                    let loadedCount = 0;
+                    const totalLoads = 5;
+                    
+                    const checkAllLoaded = () => {
+                        loadedCount++;
+                        if (loadedCount === totalLoads) {
+                            setFirebaseSynced(true);
+                            console.log('✅ All data synced with Firebase');
+                        }
+                    };
                     
                     // Load tasks
                     database.ref('userData/tasks').once('value', (snapshot) => {
@@ -1158,6 +1171,7 @@
                             localStorage.setItem('comcam_tasks', JSON.stringify(data));
                             console.log('✅ Tasks loaded from Firebase');
                         }
+                        checkAllLoaded();
                     });
 
                     // Load column widths
@@ -1168,6 +1182,7 @@
                             localStorage.setItem('comcam_columnWidths_v2', JSON.stringify(data));
                             console.log('✅ Column widths loaded from Firebase');
                         }
+                        checkAllLoaded();
                     });
 
                     // Load column order
@@ -1178,6 +1193,7 @@
                             localStorage.setItem('comcam_columnOrder_v2', JSON.stringify(data));
                             console.log('✅ Column order loaded from Firebase');
                         }
+                        checkAllLoaded();
                     });
 
                     // Load expanded groups
@@ -1188,6 +1204,7 @@
                             localStorage.setItem('comcam_expandedGroups', JSON.stringify(data));
                             console.log('✅ Expanded groups loaded from Firebase');
                         }
+                        checkAllLoaded();
                     });
 
                     // Load settings
@@ -1198,6 +1215,7 @@
                             localStorage.setItem('comcam_settings', JSON.stringify(data));
                             console.log('✅ Settings loaded from Firebase');
                         }
+                        checkAllLoaded();
                     });
                 }
             }, [user]);
@@ -1922,6 +1940,21 @@
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
                                         <h1 className="text-3xl font-bold" style={{ color: theme.textPrimary }}>COMCAM Dashboard</h1>
+                                        
+                                        {/* Firebase Sync Status */}
+                                        {user && (
+                                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                                                firebaseSynced 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                                <div className={`w-2 h-2 rounded-full ${
+                                                    firebaseSynced ? 'bg-green-600' : 'bg-yellow-600 animate-pulse'
+                                                }`}></div>
+                                                {firebaseSynced ? 'Cloud Synced' : 'Syncing...'}
+                                            </div>
+                                        )}
+                                        
                                         <button
                                             onClick={() => setShowDashboardTotal(!showDashboardTotal)}
                                             className="p-2 rounded-lg transition-all"
