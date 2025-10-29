@@ -104,22 +104,42 @@
         }
         
         .error-message, .success-message {
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
             display: none;
+            font-size: 16px;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .error-message {
             background: #f8d7da;
-            border: 2px solid #dc3545;
+            border: 3px solid #dc3545;
             color: #721c24;
         }
         
         .success-message {
             background: #d4edda;
-            border: 2px solid #28a745;
+            border: 3px solid #28a745;
             color: #155724;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .success-message strong {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 8px;
         }
         
         .error-message.show, .success-message.show {
@@ -366,6 +386,7 @@
             
             <div class="disclaimer">
                 <p>⚠️ <strong>Important:</strong> All quote requests go through a consultation process for verification of services and project planning. This ensures we fully understand your needs and can deliver the best results for your project.</p>
+                <p style="margin-top: 10px;">💰 <strong>Pricing Note:</strong> The estimates shown are baseline rates. Final pricing may vary based on project complexity, timeline requirements, and our working relationship. We're happy to discuss pricing details during our consultation!</p>
             </div>
             
             <div id="firebaseStatus" class="firebase-status disconnected">
@@ -378,8 +399,8 @@
             </div>
             
             <div id="successMessage" class="success-message">
-                <strong>✓ Request Submitted Successfully!</strong>
-                <p>Thank you! We'll review your request and contact you shortly to discuss your project.</p>
+                <strong>🎉 Request Submitted Successfully!</strong>
+                <p>Thank you! We've received your quote request and will review it shortly. You'll hear from us soon to discuss your project and finalize the details.</p>
             </div>
             
             <form id="quoteForm">
@@ -442,8 +463,17 @@
                             <small>Average: 30-60 min per hour of filming. Used to estimate hard drive size.</small>
                         </div>
                         
-                        <!-- NEW: Bulk Filming Note -->
+                        <!-- Bulk Filming Rates Info -->
                         <div class="info-banner" style="margin-top: 15px;">
+                            <h3>💰 Daily Rate Bulk Pricing</h3>
+                            <p><strong>Single days:</strong> $650/day</p>
+                            <p><strong>Weekly rate (5-6 days):</strong> $3,000/week (~$600/day - saves $250-$400)</p>
+                            <p><strong>Monthly rate (20-30 days):</strong> $10,000/month (~$400/day - saves $5,000+)</p>
+                            <p style="margin-top: 10px;"><strong>Example project:</strong> 2-week trip (14 days) = 2 weeks × $3,000 + 4 days × $650 = $8,600</p>
+                        </div>
+                        
+                        <!-- Multi-Day Planning Guide -->
+                        <div class="info-banner" style="margin-top: 15px; background: linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%); border-color: #ffc107;">
                             <h3>📅 Planning a Multi-Day Shoot?</h3>
                             <p><strong>Example:</strong> A 2-week filming trip (14 days including travel) with 8 hours of raw footage, producing 5 two-minute final videos with voiceover, music, and animations.</p>
                             <p><strong>How to quote:</strong> Set Duration to 14 days, Raw Footage to 480 minutes (8 hours), then in Post-Production set Video Duration to 10 minutes (5 videos × 2 min each) and enable the services you need.</p>
@@ -508,9 +538,9 @@
                         <div class="form-group">
                             <label>Complexity Level</label>
                             <select id="graphicsComplexity">
-                                <option value="simple">Simple ($15/sec) - Basic titles, lower thirds</option>
-                                <option value="moderate">Moderate ($35/sec) - Animated logos, infographics</option>
-                                <option value="complex">Complex ($65/sec) - 3D animation, character animation</option>
+                                <option value="simple">Simple ($15/sec) - Lower thirds, basic titles, simple text animations</option>
+                                <option value="moderate">Moderate ($35/sec) - Animated logos, kinetic typography, basic infographics</option>
+                                <option value="complex">Complex ($65/sec) - Photo montages, 3D animation, character animation, fully animated sequences</option>
                             </select>
                         </div>
                     </div>
@@ -544,7 +574,7 @@
                                 <option value="full">Full Coverage - Voiceover throughout entire video</option>
                                 <option value="partial">Partial Coverage - ~50% of video</option>
                             </select>
-                            <small>Rate is based on video duration, not script length</small>
+                            <small>Rate is based on video duration, not script length. Professional voiceover talent at competitive rates (~70% of national union scale).</small>
                         </div>
                     </div>
                 </div>
@@ -587,7 +617,7 @@
         // FIREBASE CONFIGURATION
         // ========================================
         const firebaseConfig = {
-            apiKey: "AIzaSybSLjUPp5hBKGDOnrIGL4iWDUNJC-YVXoY",
+            apiKey: "AIzaSybSLjuPp5h8K6DOnrIGL4iWDUNJC-YVXoY",
             authDomain: "comcam-dashboard.firebaseapp.com",
             databaseURL: "https://comcam-dashboard-default-rtdb.firebaseio.com",
             projectId: "comcam-dashboard",
@@ -687,12 +717,45 @@
                 const location = document.getElementById('filmingLocation').value;
                 
                 if (filmingRateType === 'daily') {
-                    const dailyRate = 650;
-                    const travelFee = location === 'travel' ? 250 : 0;
-                    const filmingTotal = (duration * dailyRate) + (duration * travelFee);
+                    // Calculate bulk pricing breakdown
+                    let remainingDays = duration;
+                    let filmingTotal = 0;
+                    const breakdown_parts = [];
+                    
+                    // Monthly rate
+                    const monthlyDays = Math.floor(remainingDays / 30);
+                    if (monthlyDays > 0) {
+                        const monthlyCost = monthlyDays * 10000;
+                        filmingTotal += monthlyCost;
+                        breakdown_parts.push(`${monthlyDays} month(s) @ $10,000/month`);
+                        remainingDays -= monthlyDays * 30;
+                    }
+                    
+                    // Weekly rate
+                    const weeklyDays = Math.floor(remainingDays / 5);
+                    if (weeklyDays > 0) {
+                        const weeklyCost = weeklyDays * 3000;
+                        filmingTotal += weeklyCost;
+                        breakdown_parts.push(`${weeklyDays} week(s) @ $3,000/week`);
+                        remainingDays -= weeklyDays * 5;
+                    }
+                    
+                    // Daily rate
+                    if (remainingDays > 0) {
+                        const dailyCost = remainingDays * 650;
+                        filmingTotal += dailyCost;
+                        breakdown_parts.push(`${remainingDays} day(s) @ $650/day`);
+                    }
+                    
+                    const breakdown_text = breakdown_parts.join(' + ');
+                    
+                    // Travel fees
+                    const travelFee = location === 'travel' ? duration * 250 : 0;
+                    const finalFilmingTotal = filmingTotal + travelFee;
+                    
                     breakdown.push({
-                        label: `Filming: ${duration} day(s) @ $${dailyRate}/day ${location === 'travel' ? '+ $' + (duration * travelFee) + ' travel' : ''}`,
-                        amount: filmingTotal
+                        label: `Filming (${duration} days total): ${breakdown_text}${location === 'travel' ? ' + $' + travelFee + ' travel' : ''}`,
+                        amount: finalFilmingTotal
                     });
                 } else {
                     const hourlyRate = 200;
@@ -830,9 +893,37 @@
                 const location = document.getElementById('filmingLocation').value;
                 
                 if (filmingRateType === 'daily') {
-                    basePrice += duration * 650;
-                    if (location === 'travel') basePrice += duration * 250;
+                    // Bulk pricing tiers for daily rates
+                    let filmingCost = 0;
+                    let remainingDays = duration;
+                    
+                    // Monthly rate: $10,000 per 30 days
+                    const monthlyDays = Math.floor(remainingDays / 30);
+                    if (monthlyDays > 0) {
+                        filmingCost += monthlyDays * 10000;
+                        remainingDays -= monthlyDays * 30;
+                    }
+                    
+                    // Weekly rate: $3,000 per 5-6 days (we'll use 5 for calculation)
+                    const weeklyDays = Math.floor(remainingDays / 5);
+                    if (weeklyDays > 0) {
+                        filmingCost += weeklyDays * 3000;
+                        remainingDays -= weeklyDays * 5;
+                    }
+                    
+                    // Daily rate: $650 per remaining day
+                    if (remainingDays > 0) {
+                        filmingCost += remainingDays * 650;
+                    }
+                    
+                    basePrice += filmingCost;
+                    
+                    // Travel fees (per day of actual filming)
+                    if (location === 'travel') {
+                        basePrice += duration * 250;
+                    }
                 } else {
+                    // Hourly rate
                     basePrice += duration * 200;
                     if (location === 'travel') basePrice += 100;
                 }
@@ -1020,6 +1111,18 @@
                 // Success
                 successMsg.classList.add('show');
                 submitBtn.innerHTML = '✓ Submitted!';
+                
+                // Scroll to top smoothly so user sees success message (especially on mobile)
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                
+                // Also scroll the container to top as backup
+                document.querySelector('.container').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
                 
                 // Reset form after delay
                 setTimeout(() => {
