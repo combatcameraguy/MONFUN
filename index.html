@@ -228,6 +228,7 @@
             const [password, setPassword] = useState('');
             const [authError, setAuthError] = useState('');
             const [firebaseSynced, setFirebaseSynced] = useState(false);
+            const [initialLoadComplete, setInitialLoadComplete] = useState(false);
             
             const [draggedTask, setDraggedTask] = useState(null);
             const [dragOverTask, setDragOverTask] = useState(null);
@@ -1151,6 +1152,7 @@
                 if (user && database) {
                     console.log('📥 Setting up real-time Firebase sync...');
                     setFirebaseSynced(false);
+                    setInitialLoadComplete(false);
                     
                     let loadedCount = 0;
                     const totalLoads = 5;
@@ -1159,6 +1161,7 @@
                         loadedCount++;
                         if (loadedCount === totalLoads) {
                             setFirebaseSynced(true);
+                            setInitialLoadComplete(true);
                             console.log('✅ All data synced with Firebase - real-time updates active');
                         }
                     };
@@ -1465,58 +1468,63 @@
             useEffect(() => {
                 try {
                     localStorage.setItem('comcam_tasks', JSON.stringify(tasks));
-                    // Also save to Firebase if authenticated
-                    if (user && database) {
+                    // Only save to Firebase if authenticated AND initial load is complete
+                    if (user && database && initialLoadComplete) {
                         database.ref('userData/tasks').set(tasks);
+                        console.log('💾 Tasks saved to Firebase');
                     }
                 } catch (error) {
                     console.error('Error saving tasks:', error);
                 }
-            }, [tasks, user]);
+            }, [tasks, user, initialLoadComplete]);
 
             useEffect(() => {
                 try {
                     localStorage.setItem('comcam_columnWidths_v2', JSON.stringify(columnWidths));
-                    if (user && database) {
+                    if (user && database && initialLoadComplete) {
                         database.ref('userData/columnWidths').set(columnWidths);
+                        console.log('💾 Column widths saved to Firebase');
                     }
                 } catch (error) {
                     console.error('Error saving columnWidths:', error);
                 }
-            }, [columnWidths, user]);
+            }, [columnWidths, user, initialLoadComplete]);
 
             useEffect(() => {
                 try {
                     localStorage.setItem('comcam_columnOrder_v2', JSON.stringify(columnOrder));
-                    if (user && database) {
+                    if (user && database && initialLoadComplete) {
                         database.ref('userData/columnOrder').set(columnOrder);
+                        console.log('💾 Column order saved to Firebase');
                     }
                 } catch (error) {
                     console.error('Error saving columnOrder:', error);
                 }
-            }, [columnOrder, user]);
+            }, [columnOrder, user, initialLoadComplete]);
 
             useEffect(() => {
                 try {
                     localStorage.setItem('comcam_expandedGroups', JSON.stringify(expandedGroups));
-                    if (user && database) {
+                    if (user && database && initialLoadComplete) {
                         database.ref('userData/expandedGroups').set(expandedGroups);
+                        console.log('💾 Expanded groups saved to Firebase');
                     }
                 } catch (error) {
                     console.error('Error saving expandedGroups:', error);
                 }
-            }, [expandedGroups, user]);
+            }, [expandedGroups, user, initialLoadComplete]);
 
             useEffect(() => {
                 try {
                     localStorage.setItem('comcam_settings', JSON.stringify(settings));
-                    if (user && database) {
+                    if (user && database && initialLoadComplete) {
                         database.ref('userData/settings').set(settings);
+                        console.log('💾 Settings saved to Firebase');
                     }
                 } catch (error) {
                     console.error('Error saving settings:', error);
                 }
-            }, [settings, user]);
+            }, [settings, user, initialLoadComplete]);
 
             const EditableCell = ({ value, taskId, field }) => {
                 const [isEditing, setIsEditing] = useState(false);
