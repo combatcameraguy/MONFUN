@@ -485,40 +485,33 @@
                 <div class="section">
                     <h2 class="section-title">✂️ Post-Production Services</h2>
                     
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="timelineEditingEnabled">
-                        <label for="timelineEditingEnabled">Enable Timeline Editing</label>
+                    <div class="form-group">
+                        <label>Video Duration (minutes) <span class="price-note">($150/min base editing rate)</span></label>
+                        <input type="number" id="duration" min="0.25" step="0.25" value="2">
+                        <small>For multiple videos, enter the combined duration (e.g., 5 videos × 2 min = 10 minutes)</small>
                     </div>
                     
-                    <div id="editingOptions" class="sub-input">
-                        <div class="form-group">
-                            <label>Video Duration (minutes) <span class="price-note">($150/min base editing rate)</span></label>
-                            <input type="number" id="duration" min="0.25" step="0.25" value="2">
-                            <small>For multiple videos, enter the combined duration (e.g., 5 videos × 2 min = 10 minutes)</small>
+                    <label style="margin-top: 20px;">Additional Services:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item" id="basicColorItem">
+                            <input type="checkbox" id="basicColor">
+                            <label for="basicColor">Basic Color Correction ($15/min)</label>
                         </div>
-                        
-                        <label>Additional Services:</label>
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="basicColor">
-                                <label for="basicColor">Basic Color Correction ($15/min)</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="advancedColor">
-                                <label for="advancedColor">Advanced Color Grading ($35/min)</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="fxWork">
-                                <label for="fxWork">Visual Effects ($65/min)</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="audioMixing">
-                                <label for="audioMixing">Audio Mixing ($45/min)</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="soundDesign">
-                                <label for="soundDesign">Sound Design/SFX ($150 flat)</label>
-                            </div>
+                        <div class="checkbox-item" id="advancedColorItem">
+                            <input type="checkbox" id="advancedColor">
+                            <label for="advancedColor">Advanced Color Grading ($35/min)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fxWork">
+                            <label for="fxWork">Visual Effects ($65/min)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="audioMixing">
+                            <label for="audioMixing">Audio Mixing ($45/min)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="soundDesign">
+                            <label for="soundDesign">Sound Design/SFX ($150 flat)</label>
                         </div>
                     </div>
                     
@@ -679,10 +672,39 @@
             }
         });
         
-        // Timeline editing toggle
-        document.getElementById('timelineEditingEnabled').addEventListener('change', function() {
-            const editingOptions = document.getElementById('editingOptions');
-            editingOptions.classList.toggle('show', this.checked);
+        // Mutual exclusion between basic and advanced color correction
+        document.getElementById('basicColor').addEventListener('change', function() {
+            const advancedColorItem = document.getElementById('advancedColorItem');
+            const advancedColorCheckbox = document.getElementById('advancedColor');
+            
+            if (this.checked) {
+                advancedColorItem.classList.add('disabled');
+                advancedColorCheckbox.disabled = true;
+                advancedColorCheckbox.checked = false;
+            } else {
+                advancedColorItem.classList.remove('disabled');
+                advancedColorCheckbox.disabled = false;
+            }
+            
+            calculatePrice();
+            updateItemizedList();
+        });
+        
+        document.getElementById('advancedColor').addEventListener('change', function() {
+            const basicColorItem = document.getElementById('basicColorItem');
+            const basicColorCheckbox = document.getElementById('basicColor');
+            
+            if (this.checked) {
+                basicColorItem.classList.add('disabled');
+                basicColorCheckbox.disabled = true;
+                basicColorCheckbox.checked = false;
+            } else {
+                basicColorItem.classList.remove('disabled');
+                basicColorCheckbox.disabled = false;
+            }
+            
+            calculatePrice();
+            updateItemizedList();
         });
         
         // Motion graphics toggle
@@ -778,48 +800,46 @@
             }
             
             // Editing costs
-            if (document.getElementById('timelineEditingEnabled').checked) {
-                const duration = parseFloat(document.getElementById('duration').value) || 0;
-                if (duration > 0) {
+            const duration = parseFloat(document.getElementById('duration').value) || 0;
+            if (duration > 0) {
+                breakdown.push({
+                    label: `Timeline Editing: ${duration} min @ $150/min`,
+                    amount: duration * 150
+                });
+                
+                if (document.getElementById('basicColor').checked) {
                     breakdown.push({
-                        label: `Timeline Editing: ${duration} min @ $150/min`,
-                        amount: duration * 150
+                        label: `Basic Color Correction: ${duration} min @ $15/min`,
+                        amount: duration * 15
                     });
-                    
-                    if (document.getElementById('basicColor').checked) {
-                        breakdown.push({
-                            label: `Basic Color Correction: ${duration} min @ $15/min`,
-                            amount: duration * 15
-                        });
-                    }
-                    
-                    if (document.getElementById('advancedColor').checked) {
-                        breakdown.push({
-                            label: `Advanced Color Grading: ${duration} min @ $35/min`,
-                            amount: duration * 35
-                        });
-                    }
-                    
-                    if (document.getElementById('fxWork').checked) {
-                        breakdown.push({
-                            label: `Visual Effects: ${duration} min @ $65/min`,
-                            amount: duration * 65
-                        });
-                    }
-                    
-                    if (document.getElementById('audioMixing').checked) {
-                        breakdown.push({
-                            label: `Audio Mixing: ${duration} min @ $45/min`,
-                            amount: duration * 45
-                        });
-                    }
-                    
-                    if (document.getElementById('soundDesign').checked) {
-                        breakdown.push({
-                            label: 'Sound Design/SFX',
-                            amount: 150
-                        });
-                    }
+                }
+                
+                if (document.getElementById('advancedColor').checked) {
+                    breakdown.push({
+                        label: `Advanced Color Grading: ${duration} min @ $35/min`,
+                        amount: duration * 35
+                    });
+                }
+                
+                if (document.getElementById('fxWork').checked) {
+                    breakdown.push({
+                        label: `Visual Effects: ${duration} min @ $65/min`,
+                        amount: duration * 65
+                    });
+                }
+                
+                if (document.getElementById('audioMixing').checked) {
+                    breakdown.push({
+                        label: `Audio Mixing: ${duration} min @ $45/min`,
+                        amount: duration * 45
+                    });
+                }
+                
+                if (document.getElementById('soundDesign').checked) {
+                    breakdown.push({
+                        label: 'Sound Design/SFX',
+                        amount: 150
+                    });
                 }
             }
             
@@ -930,8 +950,8 @@
             }
             
             // Editing
-            if (document.getElementById('timelineEditingEnabled').checked) {
-                const duration = parseFloat(document.getElementById('duration').value) || 0;
+            const duration = parseFloat(document.getElementById('duration').value) || 0;
+            if (duration > 0) {
                 basePrice += duration * 150;
                 
                 if (document.getElementById('basicColor').checked) basePrice += duration * 15;
@@ -1040,8 +1060,7 @@
                 const services = [];
                 
                 const filmingRateType = document.getElementById('filmingRateType').value;
-                const timelineEditingEnabled = document.getElementById('timelineEditingEnabled').checked;
-                const videoDuration = timelineEditingEnabled ? (parseFloat(document.getElementById('duration').value) || 0) : 0;
+                const videoDuration = parseFloat(document.getElementById('duration').value) || 0;
                 
                 if (filmingRateType === 'none') {
                     services.push('Filming: Post-Production Only (Client providing footage)');
