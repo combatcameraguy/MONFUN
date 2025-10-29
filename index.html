@@ -77,6 +77,173 @@
         const EyeOff = ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>;
         const Lock = ({ size = 64 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
 
+        // ========== LARGE CUSTOM CALENDAR COMPONENT ==========
+        const LargeCalendar = ({ value, onChange, darkMode }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [currentMonth, setCurrentMonth] = useState(new Date(value || new Date()));
+            const calendarRef = useRef(null);
+
+            // Close calendar when clicking outside
+            useEffect(() => {
+                const handleClickOutside = (e) => {
+                    if (calendarRef.current && !calendarRef.current.contains(e.target)) {
+                        setIsOpen(false);
+                    }
+                };
+                if (isOpen) {
+                    document.addEventListener('mousedown', handleClickOutside);
+                    return () => document.removeEventListener('mousedown', handleClickOutside);
+                }
+            }, [isOpen]);
+
+            const formatDisplayDate = (dateStr) => {
+                if (!dateStr) return 'Select date';
+                const date = new Date(dateStr + 'T00:00:00');
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            };
+
+            const getDaysInMonth = (date) => {
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startingDayOfWeek = firstDay.getDay();
+                
+                const days = [];
+                // Add empty cells for days before month starts
+                for (let i = 0; i < startingDayOfWeek; i++) {
+                    days.push(null);
+                }
+                // Add actual days
+                for (let i = 1; i <= daysInMonth; i++) {
+                    days.push(i);
+                }
+                return days;
+            };
+
+            const handleDayClick = (day) => {
+                if (day) {
+                    const year = currentMonth.getFullYear();
+                    const month = currentMonth.getMonth();
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    onChange(dateStr);
+                    setIsOpen(false);
+                }
+            };
+
+            const changeMonth = (delta) => {
+                setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1));
+            };
+
+            const days = getDaysInMonth(currentMonth);
+            const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const selectedDate = value ? new Date(value + 'T00:00:00') : null;
+
+            return (
+                <div ref={calendarRef} className="relative">
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="border rounded px-2 py-1 text-sm hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full text-left flex items-center justify-between"
+                        style={{
+                            borderColor: darkMode ? '#4a4a4a' : '#e5e7eb',
+                            backgroundColor: darkMode ? '#3a3a3a' : '#ffffff',
+                            color: darkMode ? '#ffffff' : '#000000',
+                            fontSize: '13px',
+                            minHeight: '32px'
+                        }}
+                    >
+                        <span>{formatDisplayDate(value)}</span>
+                        <Calendar size={16} />
+                    </button>
+
+                    {isOpen && (
+                        <div 
+                            className="absolute z-50 mt-2 rounded-lg shadow-2xl border-2"
+                            style={{
+                                backgroundColor: darkMode ? '#2a2a2a' : '#ffffff',
+                                borderColor: darkMode ? '#4a4a4a' : '#e5e7eb',
+                                width: '420px',
+                                padding: '20px'
+                            }}
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-4">
+                                <button
+                                    type="button"
+                                    onClick={() => changeMonth(-1)}
+                                    className="p-2 rounded hover:bg-gray-200"
+                                    style={{
+                                        backgroundColor: darkMode ? '#3a3a3a' : '#f3f4f6',
+                                        color: darkMode ? '#ffffff' : '#000000'
+                                    }}
+                                >
+                                    ‹
+                                </button>
+                                <span className="font-bold text-lg" style={{ color: darkMode ? '#ffffff' : '#000000' }}>
+                                    {monthName}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => changeMonth(1)}
+                                    className="p-2 rounded hover:bg-gray-200"
+                                    style={{
+                                        backgroundColor: darkMode ? '#3a3a3a' : '#f3f4f6',
+                                        color: darkMode ? '#ffffff' : '#000000'
+                                    }}
+                                >
+                                    ›
+                                </button>
+                            </div>
+
+                            {/* Day labels */}
+                            <div className="grid grid-cols-7 gap-2 mb-2">
+                                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                                    <div key={day} className="text-center font-semibold text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                                        {day}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Days grid */}
+                            <div className="grid grid-cols-7 gap-2">
+                                {days.map((day, idx) => {
+                                    if (!day) {
+                                        return <div key={idx} />;
+                                    }
+                                    
+                                    const isSelected = selectedDate && 
+                                        selectedDate.getDate() === day &&
+                                        selectedDate.getMonth() === currentMonth.getMonth() &&
+                                        selectedDate.getFullYear() === currentMonth.getFullYear();
+
+                                    return (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => handleDayClick(day)}
+                                            className="rounded-lg text-lg font-medium transition-all hover:scale-110"
+                                            style={{
+                                                padding: '12px',
+                                                backgroundColor: isSelected 
+                                                    ? '#3b82f6' 
+                                                    : darkMode ? '#3a3a3a' : '#f9fafb',
+                                                color: isSelected ? '#ffffff' : darkMode ? '#ffffff' : '#000000',
+                                                border: isSelected ? '2px solid #2563eb' : '1px solid transparent'
+                                            }}
+                                        >
+                                            {day}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         // API Configuration (deprecated - keeping for reference)
         const API_URL = 'http://localhost:3001';
 
@@ -1739,34 +1906,18 @@
                         return <ClientTypeCell clientType={task.clientType} taskId={task.id} />;
                     case 'requestDate':
                         return (
-                            <input
-                                type="date"
+                            <LargeCalendar 
                                 value={task.requestDate}
-                                onChange={(e) => updateTask(task.id, 'requestDate', e.target.value)}
-                                className="border rounded px-3 py-2 text-base hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full"
-                                style={{
-                                    borderColor: settings.darkMode ? '#4a4a4a' : '#e5e7eb',
-                                    backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
-                                    color: theme.textPrimary,
-                                    fontSize: '16px',
-                                    minHeight: '44px'
-                                }}
+                                onChange={(dateStr) => updateTask(task.id, 'requestDate', dateStr)}
+                                darkMode={settings.darkMode}
                             />
                         );
                     case 'dueDate':
                         return (
-                            <input
-                                type="date"
+                            <LargeCalendar 
                                 value={task.dueDate}
-                                onChange={(e) => updateTask(task.id, 'dueDate', e.target.value)}
-                                className="border rounded px-3 py-2 text-base hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full"
-                                style={{
-                                    borderColor: settings.darkMode ? '#4a4a4a' : '#e5e7eb',
-                                    backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
-                                    color: theme.textPrimary,
-                                    fontSize: '16px',
-                                    minHeight: '44px'
-                                }}
+                                onChange={(dateStr) => updateTask(task.id, 'dueDate', dateStr)}
+                                darkMode={settings.darkMode}
                             />
                         );
                     case 'actualWorkHours':
@@ -1978,13 +2129,13 @@
             }
 
             return (
-                <div className={`min-h-screen p-6 ${resizingColumn ? 'cursor-col-resize' : ''}`} style={{ backgroundColor: theme.background }}>
+                <div className={`min-h-screen p-4 ${resizingColumn ? 'cursor-col-resize' : ''}`} style={{ backgroundColor: theme.background }}>
                     <div className="w-full">
-                        <div className="rounded-xl shadow-lg p-6 mb-6" style={{ backgroundColor: theme.cardBg || theme.background }}>
+                        <div className="rounded-xl shadow-lg p-4 mb-4" style={{ backgroundColor: theme.cardBg || theme.background }}>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h1 className="text-3xl font-bold" style={{ color: theme.textPrimary }}>COMCAM Dashboard</h1>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h1 className="text-2xl font-bold" style={{ color: theme.textPrimary }}>COMCAM Dashboard</h1>
                                         
                                         {/* Firebase Sync Status */}
                                         {user && (
@@ -2012,23 +2163,22 @@
                                             {showDashboardTotal ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
                                     </div>
-                                    <p style={{ color: theme.textSecondary }}>Manage your work, projects, and tasks</p>
                                 </div>
-                                <div className="flex gap-3">
+                                <div className="flex gap-2">
                                     <button
                                         onClick={() => setShowSettings(true)}
-                                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
+                                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors flex items-center gap-2 text-xs"
                                     >
-                                        <Settings size={16} />
+                                        <Settings size={14} />
                                         Settings
                                     </button>
                                     
                                     <button
                                         onClick={handleLogout}
-                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
+                                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 text-xs"
                                         title="Sign out"
                                     >
-                                        <User size={16} />
+                                        <User size={14} />
                                         Logout
                                     </button>
                                     
@@ -2037,7 +2187,7 @@
                                             setShowNewRequests(true);
                                             fetchNewRequests();
                                         }}
-                                        className={`relative px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm ${
+                                        className={`relative px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-2 text-xs ${
                                             apiConnected 
                                                 ? 'bg-green-600 hover:bg-green-700 text-white' 
                                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -2045,7 +2195,7 @@
                                         disabled={!apiConnected}
                                         title={apiConnected ? 'Check new requests' : 'API not connected'}
                                     >
-                                        <Bell size={16} />
+                                        <Bell size={14} />
                                         New Requests
                                         {unreadCount > 0 && (
                                             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -2144,13 +2294,18 @@
                                                                 onDragOver={(e) => handleDragOver(e, task)}
                                                                 onDragLeave={handleDragLeave}
                                                                 onDrop={(e) => handleDrop(e, task)}
-                                                                style={{ 
-                                                                    backgroundColor: index % 2 === 0 ? theme.background : `${theme.background}ee`
-                                                                }}
-                                                                className={`border-b border-gray-100 hover:bg-blue-50/50 transition-all cursor-move ${
+                                                                className={`border-b transition-all cursor-move ${
                                                                     dragOverTask?.id === task.id ? 'border-t-4 border-t-blue-500' : ''
                                                                 } ${
                                                                     draggedTask?.id === task.id ? 'opacity-50' : ''
+                                                                } ${
+                                                                    settings.darkMode 
+                                                                        ? 'border-gray-700 hover:!bg-blue-500/30' 
+                                                                        : 'border-gray-100 hover:!bg-blue-200'
+                                                                } ${
+                                                                    index % 2 === 0 
+                                                                        ? (settings.darkMode ? 'bg-gray-800' : 'bg-white')
+                                                                        : (settings.darkMode ? 'bg-gray-850' : 'bg-gray-50')
                                                                 }`}
                                                             >
                                                                 {columnOrder.map((columnKey) => (
