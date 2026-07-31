@@ -54,6 +54,17 @@
             color: inherit;
         }
         
+        /* Smooth out all dropdown/scale animations */
+.animate-scale-in, 
+.dropdown-content,
+.modal-backdrop {
+    /* Changes the speed curve: starts slower for a smoother 'reveal' */
+    animation-timing-function: cubic-bezier(1.5, 0.1, 0.25, 1);
+    
+    /* Optional: If it still feels too fast, increase the duration slightly */
+    animation-duration: 0.3s; 
+}
+
         /* Smooth, slow, elegant slide down animation */
         @keyframes slideDown {
             0% {
@@ -910,8 +921,19 @@
                     version: '1.0'
                 };
                 
-                const jsonString = JSON.stringify(dataToSave, null, 2);
-                const filename = `COMCAM-BACKUP-LATEST.json`;
+               // Inside your saveDataToFile function
+const jsonString = JSON.stringify(dataToSave, null, 2);
+
+// Generate filename with date and time (Military Style: YYYYMMDD_HHMM)
+const now = new Date();
+const year = now.getFullYear();
+const month = String(now.getMonth() + 1).padStart(2, '0');
+const day = String(now.getDate()).padStart(2, '0');
+const hours = String(now.getHours()).padStart(2, '0'); // Military uses 24h format (0-23)
+const minutes = String(now.getMinutes()).padStart(2, '0');
+
+// Updates the filename to: COMCAM-BACKUP-YYYYMMDD_HHMM.json
+const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 
                 const blob = new Blob([jsonString], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -3194,6 +3216,47 @@
                                                 </div>
                                             </div>
                                             
+                                            {/* QuickBooks Integration Section */}
+<div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-300">
+  <div className="mb-4">
+    <h4 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+      <span className="text-xl">🧾</span> QuickBooks Integration
+    </h4>
+    <p className="text-sm text-gray-600">Sync projects and invoices to Intuit QuickBooks</p>
+  </div>
+  
+  <button
+    onClick={() => {
+      // Your provided Client ID
+      const clientId = "ABFd2mtuZUlFeZtqCitXRjxlBwRRxb5HWRkC20zl4MNuE8YxF7";
+      
+      // Note: This URI must exactly match one registered in your Intuit Developer Portal
+      // For testing, you might use "http://localhost:8080/callback" or your live URL
+      const currentHost = window.location.hostname === "localhost" ? "http://localhost:8080" : window.location.origin;
+      const redirectUri = encodeURIComponent(`${currentHost}/qb-callback.html`); 
+      
+      // Construct Intuit OAuth2 URL
+      const authUrl = `https://appcenter.intuit.com/connect/oauth2?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=com.intuit.quickbooks.accounting`;
+      
+      if (confirm(`Opening Intuit QuickBooks authorization page...\n\nEnsure "${redirectUri}" is whitelisted in your App settings.`)) {
+        window.location.href = authUrl;
+      }
+    }}
+    className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-md"
+  >
+    {/* QuickBooks Icon */}
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+    </svg>
+    Connect QuickBooks Account
+  </button>
+
+  <div className="mt-3 p-2 bg-blue-100 rounded text-xs text-blue-900">
+    ℹ️ Clicking "Connect" will open the Intuit login. To finish sync, you will need a backend endpoint to exchange the authorization code for an access token securely.
+  </div>
+</div>
+
                                             {/* Data Management Section */}
                                             <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
                                                 <div className="mb-4">
