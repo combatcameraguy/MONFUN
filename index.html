@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>COMCAM Dashboard v4.8 - Rectangular Status Boxes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +25,22 @@
     <style>
         html, body, .smooth-scroll-container {
             scroll-behavior: smooth;
+        }
+
+        /* iOS / iPhone / iPad & Desktop Seamless Fullscreen Mode */
+        .ios-fullscreen-active {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100dvh !important;
+            max-width: 100vw !important;
+            overflow-y: auto !important;
+            z-index: 40 !important;
+            padding-top: max(12px, env(safe-area-inset-top)) !important;
+            padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+            padding-left: max(12px, env(safe-area-inset-left)) !important;
+            padding-right: max(12px, env(safe-area-inset-right)) !important;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Custom Large Scrollbars for Easy Mouse Grabbing */
@@ -183,6 +201,8 @@
         const Eye = ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>;
         const EyeOff = ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>;
         const Lock = ({ size = 64 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+        const Maximize2 = ({ size = 14 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg>;
+        const Minimize2 = ({ size = 14 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" x2="21" y1="10" y2="3"/><line x1="3" x2="10" y1="21" y2="14"/></svg>;
 
         // Generate Invoice Number in YYMMDD-HHMM format (e.g., 251028-1901)
         const generateInvoiceNumber = (dateInput = new Date()) => {
@@ -774,6 +794,69 @@
                 darkMode: false
             }));
             const [showDashboardTotal, setShowDashboardTotal] = useState(false);
+            const [isFullscreen, setIsFullscreen] = useState(false);
+            const appContainerRef = useRef(null);
+
+            useEffect(() => {
+                const handleFullscreenChange = () => {
+                    const nativeFs = Boolean(
+                        document.fullscreenElement ||
+                        document.webkitFullscreenElement ||
+                        document.msFullscreenElement
+                    );
+                    setIsFullscreen(nativeFs);
+                };
+                document.addEventListener('fullscreenchange', handleFullscreenChange);
+                document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+                return () => {
+                    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+                    document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+                };
+            }, []);
+
+            const toggleFullscreen = async () => {
+                const el = appContainerRef.current || document.documentElement;
+                const nativeFs = Boolean(
+                    document.fullscreenElement ||
+                    document.webkitFullscreenElement ||
+                    document.msFullscreenElement
+                );
+
+                try {
+                    if (!isFullscreen && !nativeFs) {
+                        if (el.requestFullscreen) {
+                            await el.requestFullscreen();
+                            setIsFullscreen(true);
+                        } else if (el.webkitRequestFullscreen) {
+                            await el.webkitRequestFullscreen();
+                            setIsFullscreen(true);
+                        } else {
+                            // iPhone / iPad Safari fallback: full-viewport safe-area mode
+                            setIsFullscreen(true);
+                            window.scrollTo(0, 1);
+                        }
+                    } else {
+                        if (nativeFs) {
+                            if (document.exitFullscreen) {
+                                await document.exitFullscreen();
+                            } else if (document.webkitExitFullscreen) {
+                                await document.webkitExitFullscreen();
+                            }
+                        }
+                        setIsFullscreen(false);
+                    }
+                } catch (err) {
+                    // Fallback if native fullscreen is blocked (e.g., iOS or iframe)
+                    setIsFullscreen(prev => !prev);
+                    window.scrollTo(0, 1);
+                }
+            };
+            const [producers, setProducers] = useState(() => loadFromStorage('comcam_producers', [
+                'Sarah Johnson',
+                'Mike Chen',
+                'Emma Wilson',
+                'David Lee'
+            ]));
             
             const [resizingColumn, setResizingColumn] = useState(null);
             const resizeStartX = useRef(0);
@@ -1496,7 +1579,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                     setInitialLoadComplete(false);
                     
                     let loadedCount = 0;
-                    const totalLoads = 5;
+                    const totalLoads = 6;
                     
                     const checkAllLoaded = () => {
                         loadedCount++;
@@ -1567,6 +1650,18 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                         if (loadedCount < totalLoads) checkAllLoaded();
                     });
                     
+                    // Real-time listener for producers
+                    const producersRef = database.ref('userData/producers');
+                    const producersListener = producersRef.on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data && Array.isArray(data)) {
+                            setProducers(data);
+                            localStorage.setItem('comcam_producers', JSON.stringify(data));
+                            console.log('🔄 Producers updated from Firebase');
+                        }
+                        if (loadedCount < totalLoads) checkAllLoaded();
+                    });
+
                     // Cleanup: Remove listeners when component unmounts or user logs out
                     return () => {
                         console.log('🔌 Disconnecting Firebase real-time listeners');
@@ -1575,6 +1670,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                         orderRef.off('value', orderListener);
                         groupsRef.off('value', groupsListener);
                         settingsRef.off('value', settingsListener);
+                        producersRef.off('value', producersListener);
                     };
                 }
             }, [user]);
@@ -1959,6 +2055,18 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 }
             }, [settings, user, initialLoadComplete]);
 
+            useEffect(() => {
+                try {
+                    localStorage.setItem('comcam_producers', JSON.stringify(producers));
+                    if (user && database && initialLoadComplete) {
+                        database.ref('userData/producers').set(producers);
+                        console.log('💾 Producers saved to Firebase');
+                    }
+                } catch (error) {
+                    console.error('Error saving producers:', error);
+                }
+            }, [producers, user, initialLoadComplete]);
+
             const EditableCell = ({ value, taskId, field }) => {
                 const [isEditing, setIsEditing] = useState(false);
                 const [tempValue, setTempValue] = useState(value);
@@ -2161,6 +2269,141 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 );
             };
 
+            const ProducerCell = ({ person, taskId, isExpanded, onToggle }) => {
+                const [newName, setNewName] = useState('');
+
+                const handleAddProducer = () => {
+                    const trimmed = newName.trim();
+                    if (!trimmed) return;
+                    if (!producers.some(p => p.toLowerCase() === trimmed.toLowerCase())) {
+                        setProducers(prev => [...prev, trimmed]);
+                    }
+                    updateTask(taskId, 'person', trimmed);
+                    setNewName('');
+                    onToggle();
+                };
+
+                const handleDeleteProducer = (e, nameToDelete) => {
+                    e.stopPropagation();
+                    setProducers(prev => prev.filter(p => p !== nameToDelete));
+                };
+
+                return (
+                    <div className="w-full">
+                        <button
+                            type="button"
+                            onClick={onToggle}
+                            style={{
+                                borderColor: isExpanded ? '#3b82f6' : (settings.darkMode ? '#4a4a4a' : '#e5e7eb'),
+                                backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
+                                color: settings.darkMode ? '#ffffff' : '#1f2937',
+                                boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                                transition: 'all 0.3s ease'
+                            }}
+                            className="border rounded-lg px-3 py-2 text-sm font-medium hover:border-blue-400 w-full text-left flex items-center justify-between gap-2"
+                        >
+                            <div className="flex items-center gap-2 min-w-0">
+                                {person ? (
+                                    <>
+                                        <div
+                                            className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-xs"
+                                            style={{ backgroundColor: '#cbb045' }}
+                                        >
+                                            {person.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                        </div>
+                                        <span className="truncate">{person}</span>
+                                    </>
+                                ) : (
+                                    <span className="italic opacity-60">Select producer</span>
+                                )}
+                            </div>
+                            <div className="chevron-rotate flex-shrink-0" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                                <ChevronDown />
+                            </div>
+                        </button>
+
+                        {isExpanded && (
+                            <div
+                                className="mt-3 rounded-lg shadow-xl border-2 p-2.5 space-y-2"
+                                style={{
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: settings.darkMode ? '#2a2a2a' : '#ffffff',
+                                    animation: 'slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                                    width: '230px'
+                                }}
+                            >
+                                <input
+                                    type="text"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddProducer();
+                                        }
+                                    }}
+                                    placeholder="Type name & press Enter..."
+                                    className="w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-blue-500"
+                                    style={{
+                                        backgroundColor: settings.darkMode ? '#3a3a3a' : '#f9fafb',
+                                        borderColor: settings.darkMode ? '#4a4a4a' : '#d1d5db',
+                                        color: settings.darkMode ? '#ffffff' : '#1f2937'
+                                    }}
+                                    autoFocus
+                                />
+
+                                <div className="max-h-48 overflow-y-auto space-y-1">
+                                    {producers.map((name) => (
+                                        <div
+                                            key={name}
+                                            onClick={() => {
+                                                updateTask(taskId, 'person', name);
+                                                onToggle();
+                                            }}
+                                            className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
+                                            style={{
+                                                backgroundColor: person === name
+                                                    ? (settings.darkMode ? 'rgba(59, 130, 246, 0.25)' : '#eff6ff')
+                                                    : 'transparent',
+                                                color: settings.darkMode ? '#f3f4f6' : '#1f2937'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (person !== name) {
+                                                    e.currentTarget.style.backgroundColor = settings.darkMode ? '#3a3a3a' : '#f3f4f6';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (person !== name) {
+                                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                                }
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <div
+                                                    className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-xs"
+                                                    style={{ backgroundColor: '#cbb045' }}
+                                                >
+                                                    {name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                                </div>
+                                                <span className="truncate">{name}</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => handleDeleteProducer(e, name)}
+                                                className="p-1 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                                                title={`Remove ${name}`}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
             const renderCell = (columnKey, task) => {
                 switch (columnKey) {
                     case 'task':
@@ -2173,14 +2416,14 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                         return <EditableCell value={task.clientName} taskId={task.id} field="clientName" />;
                     case 'person':
                         return (
-                            <div className="flex items-center gap-2">
-                                {task.person && (
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm" style={{ backgroundColor: '#cbb045' }}>
-                                        {task.person.split(' ').map(n => n[0]).join('')}
-                                    </div>
+                            <ProducerCell
+                                person={task.person}
+                                taskId={task.id}
+                                isExpanded={expandedDropdown === `${task.id}-person`}
+                                onToggle={() => setExpandedDropdown(
+                                    expandedDropdown === `${task.id}-person` ? null : `${task.id}-person`
                                 )}
-                                <EditableCell value={task.person} taskId={task.id} field="person" />
-                            </div>
+                            />
                         );
                     case 'status':
                         return (
@@ -2291,7 +2534,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                             <div className="flex items-center justify-center">
                                 <button
                                     onClick={() => generateInvoice(task)}
-                                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 text-xs font-medium"
+                                    className="h-9 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors inline-flex items-center justify-center gap-1.5 text-xs font-medium"
                                     title="Generate Invoice PDF"
                                 >
                                     📄 Invoice
@@ -2303,10 +2546,10 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                             <div className="flex items-center justify-center">
                                 <button
                                     onClick={() => setSelectedTaskForMetrics(task)}
-                                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-2 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+                                    className="h-9 w-9 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors inline-flex items-center justify-center"
                                     title="View metrics"
                                 >
-                                    <BarChart size={18} />
+                                    <BarChart size={16} />
                                 </button>
                             </div>
                         );
@@ -2318,13 +2561,15 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                         );
                     case 'actions':
                         return (
-                            <button
-                                onClick={() => confirmDelete(task)}
-                                className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded transition-colors"
-                                title="Delete task"
-                            >
-                                <Trash2 size={18} />
-                            </button>
+                            <div className="flex items-center justify-center">
+                                <button
+                                    onClick={() => confirmDelete(task)}
+                                    className="h-9 w-9 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors inline-flex items-center justify-center"
+                                    title="Delete task"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
                         );
                     default:
                         return null;
@@ -2456,7 +2701,11 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
             }
 
             return (
-                <div className={`min-h-screen p-4 ${resizingColumn ? 'cursor-col-resize' : ''}`} style={{ backgroundColor: theme.background }}>
+                <div
+                    ref={appContainerRef}
+                    className={`min-h-screen p-4 ${resizingColumn ? 'cursor-col-resize' : ''} ${isFullscreen ? 'ios-fullscreen-active' : ''}`}
+                    style={{ backgroundColor: theme.background }}
+                >
                     <div className="w-full">
                         <div className="flex flex-wrap items-center justify-between gap-3 py-2 mb-4">
                             <div className="flex flex-wrap items-center gap-2.5">
@@ -2515,10 +2764,27 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <button
+                                    onClick={toggleFullscreen}
+                                    className="h-9 px-3.5 rounded-lg font-medium transition-all active:scale-95 inline-flex items-center gap-2 text-xs touch-manipulation"
+                                    style={{
+                                        backgroundColor: isFullscreen
+                                            ? (settings.useTheme ? theme.primary : '#2563eb')
+                                            : (settings.darkMode ? '#3a3a3a' : '#f3f4f6'),
+                                        color: isFullscreen
+                                            ? '#ffffff'
+                                            : (settings.darkMode ? '#f3f4f6' : '#374151')
+                                    }}
+                                    title={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
+                                >
+                                    {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                                    <span className="hidden sm:inline">{isFullscreen ? 'Exit Full' : 'Full Screen'}</span>
+                                </button>
+
                                 <button
                                     onClick={() => setShowSettings(true)}
-                                    className="h-9 px-3.5 rounded-lg font-medium transition-colors inline-flex items-center gap-2 text-xs"
+                                    className="h-9 px-3.5 rounded-lg font-medium transition-colors inline-flex items-center gap-2 text-xs touch-manipulation"
                                     style={{
                                         backgroundColor: settings.darkMode ? '#3a3a3a' : '#f3f4f6',
                                         color: settings.darkMode ? '#f3f4f6' : '#374151'
