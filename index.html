@@ -28,6 +28,12 @@
         }
 
         /* iOS / iPhone / iPad & Desktop Seamless Fullscreen Mode */
+        html.fs-locked, body.fs-locked {
+            overflow: hidden !important;
+            overscroll-behavior: none !important;
+            touch-action: pan-x pan-y;
+        }
+
         .ios-fullscreen-active {
             position: fixed !important;
             inset: 0 !important;
@@ -35,6 +41,7 @@
             height: 100dvh !important;
             max-width: 100vw !important;
             overflow-y: auto !important;
+            overscroll-behavior: contain !important;
             z-index: 40 !important;
             padding-top: max(12px, env(safe-area-inset-top)) !important;
             padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
@@ -104,74 +111,118 @@
             color: inherit;
         }
         
-        /* Smooth out all dropdown/scale animations */
-.animate-scale-in, 
-.dropdown-content,
-.modal-backdrop {
-    /* Changes the speed curve: starts slower for a smoother 'reveal' */
-    animation-timing-function: cubic-bezier(1.5, 0.1, 0.25, 1);
-    
-    /* Optional: If it still feels too fast, increase the duration slightly */
-    animation-duration: 0.3s; 
-}
+        /* 2-Second Drop-Down Accordion: Floats Over Column Dividers Without Stretching Column Width */
+        .smooth-accordion {
+            display: block !important;
+            position: relative !important;
+            width: 100% !important;
+            height: 0px !important;
+            opacity: 0 !important;
+            margin-top: 0px !important;
+            overflow: visible !important;
+            pointer-events: none !important;
+            z-index: 80;
+            will-change: height, opacity, margin-top;
+            transition:
+                height 2s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 1.6s cubic-bezier(0.22, 1, 0.36, 1),
+                margin-top 2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+        }
 
-        /* Smooth, slow, elegant slide down animation */
-        @keyframes slideDown {
-            0% {
-                opacity: 0;
-                transform: translateY(-20px) scale(0.95);
-                max-height: 0;
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-                max-height: 600px;
-            }
+        .smooth-accordion.is-open {
+            height: var(--accordion-h, 340px) !important;
+            opacity: 1 !important;
+            margin-top: 12px !important;
+            pointer-events: auto !important;
         }
-        
-        /* Fade in animation for individual buttons */
-        @keyframes fadeIn {
-            0% {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        .smooth-accordion-inner {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: max-content !important;
+            overflow: visible !important;
+            transform: translateY(-14px);
+            transition: transform 2s cubic-bezier(0.22, 1, 0.36, 1) !important;
         }
-        
-        .animate-fade-in {
-            animation: fadeIn 1s ease-out forwards;
+
+        .smooth-accordion.is-open .smooth-accordion-inner {
+            transform: translateY(0);
+        }
+
+        /* Staggered Cascade for Dropdown Items & Calendar Days */
+        .smooth-accordion .cascade-item {
             opacity: 0;
+            transform: translateY(-16px);
+            transition:
+                opacity 1.6s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 2s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.2s ease,
+                background-color 0.2s ease;
         }
-        
-        /* Row expansion with ultra-smooth, luxurious 2-second transitions */
-        tbody tr {
-            transition: all 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+        .smooth-accordion.is-open .cascade-item {
+            opacity: 1;
+            transform: translateY(0);
         }
-        
+
+        /* 2-Second Group Accordion (INBOX / COMPLETED) with Cascade */
+        .group-accordion {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            pointer-events: none;
+            transition:
+                grid-template-rows 2s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .group-accordion.is-open {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .group-accordion-inner {
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* 2-Second Cascading Row Animation Inside INBOX & COMPLETED */
+        .cascade-row {
+            opacity: 0;
+            transform: translateY(-16px);
+            transition:
+                opacity 1.6s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 2s cubic-bezier(0.22, 1, 0.36, 1),
+                background-color 0.4s ease,
+                padding 2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .group-accordion.is-open .cascade-row {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         /* Expanded row styling */
         tbody tr.calendar-expanded {
             background: linear-gradient(to right, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04)) !important;
             box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+            position: relative;
+            z-index: 35;
         }
-        
-        tbody tr.calendar-expanded td {
-            padding-top: 2rem !important;
-            padding-bottom: 2rem !important;
+
+        tbody tr td {
             vertical-align: top !important;
-            transition: padding 2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        
-        /* Make cells take full width when expanded */
+
         tbody tr.calendar-expanded td > div {
             width: 100%;
         }
-        
-        /* Ultra-smooth 2-second chevron rotation with bounce */
+
+        /* 2-Second Smooth Chevron Rotation */
         .chevron-rotate {
-            transition: transform 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 2s cubic-bezier(0.22, 1, 0.36, 1);
         }
     </style>
 </head>
@@ -267,15 +318,13 @@
                     <button
                         type="button"
                         onClick={onToggle}
-                        className="border rounded px-3 py-2 text-sm hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full text-left flex items-center justify-between"
+                        className="border h-[38px] rounded px-3 text-sm hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full text-left flex items-center justify-between"
                         style={{
                             borderColor: isExpanded ? '#3b82f6' : (darkMode ? '#4a4a4a' : '#e5e7eb'),
                             backgroundColor: darkMode ? '#3a3a3a' : '#ffffff',
                             color: darkMode ? '#ffffff' : '#000000',
-                            fontSize: '14px',
-                            minHeight: '38px',
                             boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
-                            transition: 'all 2s ease'
+                            transition: 'border-color 0.35s ease, box-shadow 0.35s ease'
                         }}
                     >
                         <span className="font-medium">{formatDisplayDate(value)}</span>
@@ -284,17 +333,17 @@
                         </div>
                     </button>
 
-                    {isExpanded && (
-                        <div 
-                            className="mt-3 rounded-lg shadow-xl border-2"
-                            style={{
-                                backgroundColor: darkMode ? '#2a2a2a' : '#ffffff',
-                                borderColor: '#3b82f6',
-                                padding: '16px',
-                                width: '360px',
-                                animation: 'slideDown 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
-                            }}
-                        >
+                    <div className={`smooth-accordion ${isExpanded ? 'is-open' : ''}`} style={{ '--accordion-h': '340px' }}>
+                        <div className="smooth-accordion-inner">
+                            <div
+                                className="rounded-lg shadow-xl border-2"
+                                style={{
+                                    backgroundColor: darkMode ? '#2a2a2a' : '#ffffff',
+                                    borderColor: '#3b82f6',
+                                    padding: '16px',
+                                    width: '360px'
+                                }}
+                            >
                             <div className="flex items-center justify-between mb-4">
                                 <button
                                     type="button"
@@ -337,6 +386,7 @@
                                         return <div key={idx} />;
                                     }
                                     
+                                    const rowIndex = Math.floor(idx / 7);
                                     const isSelected = selectedDate && 
                                         selectedDate.getDate() === day &&
                                         selectedDate.getMonth() === currentMonth.getMonth() &&
@@ -347,14 +397,17 @@
                                             key={idx}
                                             type="button"
                                             onClick={() => handleDayClick(day)}
-                                            className="rounded-lg text-sm font-semibold transition-all duration-2000 hover:scale-110 hover:shadow-md"
+                                            className="cascade-item rounded-lg text-sm font-semibold hover:scale-105 hover:shadow-md"
                                             style={{
                                                 padding: '8px',
                                                 backgroundColor: isSelected 
                                                     ? '#3b82f6' 
                                                     : darkMode ? '#3a3a3a' : '#f9fafb',
                                                 color: isSelected ? '#ffffff' : darkMode ? '#ffffff' : '#000000',
-                                                border: isSelected ? '2px solid #2563eb' : '1px solid ' + (darkMode ? '#4a4a4a' : '#e5e7eb')
+                                                border: isSelected ? '2px solid #2563eb' : '1px solid ' + (darkMode ? '#4a4a4a' : '#e5e7eb'),
+                                                transitionDelay: isExpanded
+                                                    ? `${Math.min(rowIndex * 110, 660)}ms`
+                                                    : `${Math.min((5 - rowIndex) * 90, 540)}ms`
                                             }}
                                         >
                                             {day}
@@ -363,7 +416,444 @@
                                 })}
                             </div>
                         </div>
-                    )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+
+        // ========== SHARED DROPDOWN COLOR MAPS ==========
+        const statusColors = {
+            'Working on it': '#81b6e3',
+            'Done': '#53df98',
+            'Stuck': '#e4732f',
+            'Not started': '#9ca3af'
+        };
+
+        const priorityColors = {
+            'High': '#a6e42f',
+            'Standard': '#81b6e3'
+        };
+
+        const clientTypeColors = {
+            'Commercial/Local Business': '#81b6e3',
+            'Out of State Commercial (+30%)': '#a6e42f',
+            'State Government (+20%)': '#d8973c',
+            'Federal Government (+50%)': '#bd632f',
+            'Fortune 500 (x2)': '#a4243b',
+            'Education (Discount)': '#9370db',
+            'Military/Veteran (-40%)': '#53df98'
+        };
+
+        // ========== INLINE EXPANDING DROPDOWN COMPONENTS ==========
+        const StatusCell = ({ status, taskId, darkMode, onUpdate, isExpanded, onToggle }) => {
+            const options = ['Working on it', 'Done', 'Stuck', 'Not started'];
+
+            return (
+                <div className="w-full">
+                    <button
+                        type="button"
+                        onClick={onToggle}
+                        style={{
+                            backgroundColor: statusColors[status],
+                            boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                            transition: 'border-color 0.35s ease, box-shadow 0.35s ease'
+                        }}
+                        className="text-white h-[38px] px-3 rounded text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
+                    >
+                        <span>{status}</span>
+                        <div className="chevron-rotate" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                            <ChevronDown />
+                        </div>
+                    </button>
+                    <div className={`smooth-accordion ${isExpanded ? 'is-open' : ''}`} style={{ '--accordion-h': '220px' }}>
+                        <div className="smooth-accordion-inner">
+                            <div
+                                className="rounded-lg shadow-xl border-2 p-2 space-y-2"
+                                style={{
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: darkMode ? '#2a2a2a' : '#ffffff',
+                                    width: '200px'
+                                }}
+                            >
+                                {options.map((option, index) => (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        onClick={() => {
+                                            onUpdate(taskId, 'status', option);
+                                            onToggle();
+                                        }}
+                                        style={{
+                                            backgroundColor: statusColors[option],
+                                            transitionDelay: isExpanded
+                                                ? `${Math.min(index * 130, 650)}ms`
+                                                : `${Math.min((options.length - 1 - index) * 110, 550)}ms`
+                                        }}
+                                        className="cascade-item text-white px-4 py-2.5 w-full text-left text-sm font-semibold rounded-lg hover:scale-[1.02] hover:shadow-md"
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PriorityCell = ({ priority, taskId, task, dueDateWarning, darkMode, onUpdate, isExpanded, onToggle }) => {
+            const options = ['Standard', 'High'];
+
+            const shouldShowWarning = () => {
+                if (!dueDateWarning || !task.dueDate) return false;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const dueDate = new Date(task.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                const diffTime = dueDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays <= 1 && diffDays >= 0;
+            };
+
+            const displayColor = shouldShowWarning() ? '#ff7575' : priorityColors[priority];
+
+            return (
+                <div className="w-full">
+                    <button
+                        type="button"
+                        onClick={onToggle}
+                        style={{
+                            backgroundColor: displayColor,
+                            boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                            transition: 'border-color 0.35s ease, box-shadow 0.35s ease'
+                        }}
+                        className="text-gray-800 h-[38px] px-3 rounded text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
+                    >
+                        <span>{priority}</span>
+                        <div className="chevron-rotate" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                            <ChevronDown />
+                        </div>
+                    </button>
+                    <div className={`smooth-accordion ${isExpanded ? 'is-open' : ''}`} style={{ '--accordion-h': '125px' }}>
+                        <div className="smooth-accordion-inner">
+                            <div
+                                className="rounded-lg shadow-xl border-2 p-2.5 space-y-2"
+                                style={{
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: darkMode ? '#2a2a2a' : '#ffffff',
+                                    width: '200px'
+                                }}
+                            >
+                                {options.map((option, index) => (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        onClick={() => {
+                                            onUpdate(taskId, 'priority', option);
+                                            onToggle();
+                                        }}
+                                        style={{
+                                            backgroundColor: priorityColors[option],
+                                            transitionDelay: isExpanded
+                                                ? `${index * 160}ms`
+                                                : `${(options.length - 1 - index) * 140}ms`
+                                        }}
+                                        className="cascade-item text-gray-800 px-4 py-2.5 w-full text-left text-sm font-bold rounded-lg hover:scale-[1.02] hover:shadow-md"
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ClientTypeCell = ({ clientType, taskId, darkMode, onUpdate, isExpanded, onToggle }) => {
+            const options = [
+                'Commercial/Local Business',
+                'Out of State Commercial (+30%)',
+                'State Government (+20%)',
+                'Federal Government (+50%)',
+                'Fortune 500 (x2)',
+                'Education (Discount)',
+                'Military/Veteran (-40%)'
+            ];
+
+            return (
+                <div className="w-full">
+                    <button
+                        type="button"
+                        onClick={onToggle}
+                        style={{
+                            backgroundColor: clientTypeColors[clientType] || '#81b6e3',
+                            boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                            transition: 'border-color 0.35s ease, box-shadow 0.35s ease'
+                        }}
+                        className="text-gray-800 h-[38px] px-3 rounded text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
+                    >
+                        <span className="truncate">{clientType || 'Commercial/Local Business'}</span>
+                        <div className="chevron-rotate flex-shrink-0" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                            <ChevronDown />
+                        </div>
+                    </button>
+                    <div className={`smooth-accordion ${isExpanded ? 'is-open' : ''}`} style={{ '--accordion-h': '365px' }}>
+                        <div className="smooth-accordion-inner">
+                            <div
+                                className="rounded-lg shadow-xl border-2 p-2 space-y-2"
+                                style={{
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: darkMode ? '#2a2a2a' : '#ffffff',
+                                    width: '280px'
+                                }}
+                            >
+                                {options.map((option, index) => (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        onClick={() => {
+                                            onUpdate(taskId, 'clientType', option);
+                                            onToggle();
+                                        }}
+                                        style={{
+                                            backgroundColor: clientTypeColors[option],
+                                            transitionDelay: isExpanded
+                                                ? `${Math.min(index * 110, 660)}ms`
+                                                : `${Math.min((options.length - 1 - index) * 90, 540)}ms`
+                                        }}
+                                        className="cascade-item text-gray-800 px-4 py-2.5 w-full text-left text-sm font-semibold rounded-lg hover:scale-[1.02] hover:shadow-md"
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ProducerCell = ({ person, taskId, producers, setProducers, darkMode, onUpdate, isExpanded, onToggle }) => {
+            const [newName, setNewName] = useState('');
+
+            const handleAddProducer = () => {
+                const trimmed = newName.trim();
+                if (!trimmed) return;
+                if (!producers.some(p => p.toLowerCase() === trimmed.toLowerCase())) {
+                    setProducers(prev => [...prev, trimmed]);
+                }
+                onUpdate(taskId, 'person', trimmed);
+                setNewName('');
+                onToggle();
+            };
+
+            const handleDeleteProducer = (e, nameToDelete) => {
+                e.stopPropagation();
+                setProducers(prev => prev.filter(p => p !== nameToDelete));
+            };
+
+            return (
+                <div className="w-full">
+                    <button
+                        type="button"
+                        onClick={onToggle}
+                        style={{
+                            borderColor: isExpanded ? '#3b82f6' : (darkMode ? '#4a4a4a' : '#e5e7eb'),
+                            backgroundColor: darkMode ? '#3a3a3a' : '#ffffff',
+                            color: darkMode ? '#ffffff' : '#1f2937',
+                            boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
+                            transition: 'border-color 0.35s ease, box-shadow 0.35s ease'
+                        }}
+                        className="border h-[38px] rounded px-3 text-sm font-medium hover:border-blue-400 w-full text-left flex items-center justify-between gap-2"
+                    >
+                        <div className="flex items-center gap-2 min-w-0">
+                            {person ? (
+                                <>
+                                    <div
+                                        className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-xs"
+                                        style={{ backgroundColor: '#cbb045' }}
+                                    >
+                                        {person.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                    </div>
+                                    <span className="truncate">{person}</span>
+                                </>
+                            ) : (
+                                <span className="italic opacity-60">Select producer</span>
+                            )}
+                        </div>
+                        <div className="chevron-rotate flex-shrink-0" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                            <ChevronDown />
+                        </div>
+                    </button>
+
+                    <div
+                        className={`smooth-accordion ${isExpanded ? 'is-open' : ''}`}
+                        style={{ '--accordion-h': `${Math.min(72 + producers.length * 44, 290)}px` }}
+                    >
+                        <div className="smooth-accordion-inner">
+                            <div
+                                className="rounded-lg shadow-xl border-2 p-2.5 space-y-2"
+                                style={{
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: darkMode ? '#2a2a2a' : '#ffffff',
+                                    width: '230px'
+                                }}
+                            >
+                                <input
+                                    type="text"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddProducer();
+                                        }
+                                    }}
+                                    placeholder="Type name & press Enter..."
+                                    className="cascade-item w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-blue-500"
+                                    style={{
+                                        backgroundColor: darkMode ? '#3a3a3a' : '#f9fafb',
+                                        borderColor: darkMode ? '#4a4a4a' : '#d1d5db',
+                                        color: darkMode ? '#ffffff' : '#1f2937',
+                                        transitionDelay: isExpanded ? '0ms' : `${Math.min(producers.length * 100, 600)}ms`
+                                    }}
+                                />
+
+                                <div className="max-h-48 overflow-y-auto space-y-1">
+                                    {producers.map((name, index) => (
+                                        <div
+                                            key={name}
+                                            onClick={() => {
+                                                onUpdate(taskId, 'person', name);
+                                                onToggle();
+                                            }}
+                                            className="cascade-item flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium cursor-pointer"
+                                            style={{
+                                                backgroundColor: person === name
+                                                    ? (darkMode ? 'rgba(59, 130, 246, 0.25)' : '#eff6ff')
+                                                    : 'transparent',
+                                                color: darkMode ? '#f3f4f6' : '#1f2937',
+                                                transitionDelay: isExpanded
+                                                    ? `${Math.min((index + 1) * 110, 660)}ms`
+                                                    : `${Math.min((producers.length - 1 - index) * 90, 540)}ms`
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (person !== name) {
+                                                    e.currentTarget.style.backgroundColor = darkMode ? '#3a3a3a' : '#f3f4f6';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (person !== name) {
+                                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                                }
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <div
+                                                    className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-xs"
+                                                    style={{ backgroundColor: '#cbb045' }}
+                                                >
+                                                    {name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                                </div>
+                                                <span className="truncate">{name}</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => handleDeleteProducer(e, name)}
+                                                className="p-1 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                                                title={`Remove ${name}`}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+
+        const EditableCell = ({ value, taskId, field, darkMode, onUpdate, multiline = false }) => {
+            const [isEditing, setIsEditing] = useState(false);
+            const [tempValue, setTempValue] = useState(value);
+
+            useEffect(() => {
+                setTempValue(value);
+            }, [value]);
+
+            const handleSave = () => {
+                onUpdate(taskId, field, tempValue);
+                setIsEditing(false);
+            };
+
+            if (isEditing) {
+                if (multiline) {
+                    return (
+                        <textarea
+                            value={tempValue}
+                            onChange={(e) => setTempValue(e.target.value)}
+                            onBlur={handleSave}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSave();
+                                }
+                            }}
+                            rows={3}
+                            className="w-full min-h-[76px] px-3 py-2 text-sm border border-blue-500 rounded focus:outline-none resize-y leading-relaxed"
+                            style={{
+                                backgroundColor: darkMode ? '#3a3a3a' : '#ffffff',
+                                color: darkMode ? '#ffffff' : '#1f2937'
+                            }}
+                            autoFocus
+                        />
+                    );
+                }
+
+                return (
+                    <input
+                        type="text"
+                        value={tempValue}
+                        onChange={(e) => setTempValue(e.target.value)}
+                        onBlur={handleSave}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSave()}
+                        className="w-full h-[38px] px-3 text-sm border border-blue-500 rounded focus:outline-none"
+                        style={{
+                            backgroundColor: darkMode ? '#3a3a3a' : '#ffffff',
+                            color: darkMode ? '#ffffff' : '#1f2937'
+                        }}
+                        autoFocus
+                    />
+                );
+            }
+
+            if (multiline) {
+                return (
+                    <div
+                        onClick={() => setIsEditing(true)}
+                        className="cursor-pointer px-3 py-2 rounded min-h-[38px] w-full text-sm whitespace-pre-wrap break-words leading-relaxed"
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#3a3a3a' : '#f9fafb'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                        {value || <span className="italic opacity-60">Click to edit</span>}
+                    </div>
+                );
+            }
+
+            return (
+                <div
+                    onClick={() => setIsEditing(true)}
+                    className="cursor-pointer px-3 rounded h-[38px] flex items-center text-sm"
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#3a3a3a' : '#f9fafb'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                    <span className="truncate">{value || <span className="italic opacity-60">Click to edit</span>}</span>
                 </div>
             );
         };
@@ -797,6 +1287,21 @@
             const [isFullscreen, setIsFullscreen] = useState(false);
             const appContainerRef = useRef(null);
 
+            const isAppleTouchDevice = () => {
+                return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            };
+
+            useEffect(() => {
+                if (isFullscreen) {
+                    document.documentElement.classList.add('fs-locked');
+                    document.body.classList.add('fs-locked');
+                } else {
+                    document.documentElement.classList.remove('fs-locked');
+                    document.body.classList.remove('fs-locked');
+                }
+            }, [isFullscreen]);
+
             useEffect(() => {
                 const handleFullscreenChange = () => {
                     const nativeFs = Boolean(
@@ -804,7 +1309,10 @@
                         document.webkitFullscreenElement ||
                         document.msFullscreenElement
                     );
-                    setIsFullscreen(nativeFs);
+                    // On desktop, sync with Escape key exit; on iPad/iPhone, keep locked until button tap
+                    if (!isAppleTouchDevice()) {
+                        setIsFullscreen(nativeFs);
+                    }
                 };
                 document.addEventListener('fullscreenchange', handleFullscreenChange);
                 document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -822,6 +1330,13 @@
                     document.msFullscreenElement
                 );
 
+                // On iPad / iPhone, use locked viewport fullscreen so downward swipes never exit
+                if (isAppleTouchDevice()) {
+                    setIsFullscreen(prev => !prev);
+                    window.scrollTo(0, 1);
+                    return;
+                }
+
                 try {
                     if (!isFullscreen && !nativeFs) {
                         if (el.requestFullscreen) {
@@ -831,9 +1346,7 @@
                             await el.webkitRequestFullscreen();
                             setIsFullscreen(true);
                         } else {
-                            // iPhone / iPad Safari fallback: full-viewport safe-area mode
                             setIsFullscreen(true);
-                            window.scrollTo(0, 1);
                         }
                     } else {
                         if (nativeFs) {
@@ -846,9 +1359,7 @@
                         setIsFullscreen(false);
                     }
                 } catch (err) {
-                    // Fallback if native fullscreen is blocked (e.g., iOS or iframe)
                     setIsFullscreen(prev => !prev);
-                    window.scrollTo(0, 1);
                 }
             };
             const [producers, setProducers] = useState(() => loadFromStorage('comcam_producers', [
@@ -862,27 +1373,7 @@
             const resizeStartX = useRef(0);
             const resizeStartWidth = useRef(0);
 
-            const statusColors = {
-                'Working on it': '#81b6e3',
-                'Done': '#53df98',
-                'Stuck': '#e4732f',
-                'Not started': '#9ca3af'
-            };
 
-            const priorityColors = {
-                'High': '#a6e42f',
-                'Standard': '#81b6e3'
-            };
-
-            const clientTypeColors = {
-                'Commercial/Local Business': '#81b6e3',
-                'Out of State Commercial (+30%)': '#a6e42f',
-                'State Government (+20%)': '#d8973c',
-                'Federal Government (+50%)': '#bd632f',
-                'Fortune 500 (x2)': '#a4243b',
-                'Education (Discount)': '#9370db',
-                'Military/Veteran (-40%)': '#53df98'
-            };
 
             // Get current theme colors
             const baseTheme = settings.useTheme 
@@ -1872,7 +2363,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
             const handleMouseMove = useCallback((e) => {
                 if (resizingColumn) {
                     const diff = e.clientX - resizeStartX.current;
-                    const newWidth = Math.max(80, resizeStartWidth.current + diff);
+                    const newWidth = Math.max(40, resizeStartWidth.current + diff);
                     setColumnWidths(prev => ({
                         ...prev,
                         [resizingColumn]: newWidth
@@ -2067,358 +2558,25 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 }
             }, [producers, user, initialLoadComplete]);
 
-            const EditableCell = ({ value, taskId, field }) => {
-                const [isEditing, setIsEditing] = useState(false);
-                const [tempValue, setTempValue] = useState(value);
-
-                useEffect(() => {
-                    setTempValue(value);
-                }, [value]);
-
-                const handleSave = () => {
-                    updateTask(taskId, field, tempValue);
-                    setIsEditing(false);
-                };
-
-                if (isEditing) {
-                    return (
-                        <input
-                            type="text"
-                            value={tempValue}
-                            onChange={(e) => setTempValue(e.target.value)}
-                            onBlur={handleSave}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSave()}
-                            className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none"
-                            style={{
-                                backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
-                                color: settings.darkMode ? '#ffffff' : '#1f2937'
-                            }}
-                            autoFocus
-                        />
-                    );
-                }
-
-                return (
-                    <div
-                        onClick={() => setIsEditing(true)}
-                        className="cursor-pointer px-2 py-1 rounded min-h-[24px]"
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = settings.darkMode ? '#3a3a3a' : '#f9fafb'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                        {value || <span className="italic opacity-60">Click to edit</span>}
-                    </div>
-                );
-            };
-
-            const StatusCell = ({ status, taskId, isExpanded, onToggle }) => {
-                const options = ['Working on it', 'Done', 'Stuck', 'Not started'];
-
-                return (
-                    <div className="w-full">
-                        <button
-                            onClick={onToggle}
-                            style={{ 
-                                backgroundColor: statusColors[status],
-                                boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
-                                transition: 'all 2s ease'
-                            }}
-                            className="text-white px-3 py-2 rounded text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
-                        >
-                            <span>{status}</span>
-                            <div className="chevron-rotate" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                                <ChevronDown />
-                            </div>
-                        </button>
-                        {isExpanded && (
-                            <div className="mt-3 rounded-lg shadow-xl border-2 p-2 space-y-2" style={{
-                                borderColor: '#3b82f6',
-                                backgroundColor: settings.darkMode ? '#2a2a2a' : '#ffffff',
-                                animation: 'slideDown 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-                                width: '200px'
-                            }}>
-                                {options.map(option => (
-                                    <button
-                                        key={option}
-                                        onClick={() => {
-                                            updateTask(taskId, 'status', option);
-                                            onToggle();
-                                        }}
-                                        style={{ backgroundColor: statusColors[option] }}
-                                        className="text-white px-4 py-3 w-full text-left text-sm font-semibold rounded-lg hover:scale-105 hover:shadow-lg transition-all duration-2000"
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
-            const PriorityCell = ({ priority, taskId, task, isExpanded, onToggle }) => {
-                const options = ['Standard', 'High'];
-                
-                const shouldShowWarning = () => {
-                    if (!settings.dueDateWarning || !task.dueDate) return false;
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const dueDate = new Date(task.dueDate);
-                    dueDate.setHours(0, 0, 0, 0);
-                    const diffTime = dueDate - today;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays <= 1 && diffDays >= 0;
-                };
-                
-                const displayColor = shouldShowWarning() ? '#ff7575' : priorityColors[priority];
-
-                return (
-                    <div className="w-full">
-                        <button
-                            onClick={onToggle}
-                            style={{ 
-                                backgroundColor: displayColor,
-                                boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
-                                transition: 'all 2s ease'
-                            }}
-                            className="text-gray-800 px-3 py-2 rounded text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
-                        >
-                            <span>{priority}</span>
-                            <div className="chevron-rotate" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                                <ChevronDown />
-                            </div>
-                        </button>
-                        {isExpanded && (
-                            <div className="mt-3 rounded-lg shadow-xl border-2 p-3 space-y-3" style={{
-                                borderColor: '#3b82f6',
-                                backgroundColor: settings.darkMode ? '#2a2a2a' : '#ffffff',
-                                animation: 'slideDown 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-                                width: '200px'
-                            }}>
-                                {options.map((option, index) => (
-                                    <button
-                                        key={option}
-                                        onClick={() => {
-                                            updateTask(taskId, 'priority', option);
-                                            onToggle();
-                                        }}
-                                        style={{ 
-                                            backgroundColor: priorityColors[option],
-                                            animationDelay: `${index * 0.4}s`
-                                        }}
-                                        className="text-gray-800 px-5 py-4 w-full text-left text-base font-bold rounded-lg hover:scale-110 hover:shadow-2xl transition-all duration-2000 animate-fade-in"
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
-            const ClientTypeCell = ({ clientType, taskId, isExpanded, onToggle }) => {
-                const options = [
-                    'Commercial/Local Business',
-                    'Out of State Commercial (+30%)',
-                    'State Government (+20%)',
-                    'Federal Government (+50%)',
-                    'Fortune 500 (x2)',
-                    'Education (Discount)',
-                    'Military/Veteran (-40%)'
-                ];
-
-                return (
-                    <div className="w-full">
-                        <button
-                            onClick={onToggle}
-                            style={{ 
-                                backgroundColor: clientTypeColors[clientType] || '#81b6e3',
-                                boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
-                                transition: 'all 2s ease'
-                            }}
-                            className="text-gray-800 px-3 py-2 rounded text-sm font-medium hover:opacity-90 w-full text-left flex items-center justify-between"
-                        >
-                            <span className="truncate">{clientType || 'Commercial/Local Business'}</span>
-                            <div className="chevron-rotate flex-shrink-0" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                                <ChevronDown />
-                            </div>
-                        </button>
-                        {isExpanded && (
-                            <div className="mt-3 rounded-lg shadow-xl border-2 p-2 space-y-2 max-h-80 overflow-y-auto" style={{
-                                borderColor: '#3b82f6',
-                                backgroundColor: settings.darkMode ? '#2a2a2a' : '#ffffff',
-                                animation: 'slideDown 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-                                width: '280px'
-                            }}>
-                                {options.map(option => (
-                                    <button
-                                        key={option}
-                                        onClick={() => {
-                                            updateTask(taskId, 'clientType', option);
-                                            onToggle();
-                                        }}
-                                        style={{ backgroundColor: clientTypeColors[option] }}
-                                        className="text-gray-800 px-4 py-3 w-full text-left text-sm font-semibold rounded-lg hover:scale-105 hover:shadow-lg transition-all duration-2000"
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
-            const ProducerCell = ({ person, taskId, isExpanded, onToggle }) => {
-                const [newName, setNewName] = useState('');
-
-                const handleAddProducer = () => {
-                    const trimmed = newName.trim();
-                    if (!trimmed) return;
-                    if (!producers.some(p => p.toLowerCase() === trimmed.toLowerCase())) {
-                        setProducers(prev => [...prev, trimmed]);
-                    }
-                    updateTask(taskId, 'person', trimmed);
-                    setNewName('');
-                    onToggle();
-                };
-
-                const handleDeleteProducer = (e, nameToDelete) => {
-                    e.stopPropagation();
-                    setProducers(prev => prev.filter(p => p !== nameToDelete));
-                };
-
-                return (
-                    <div className="w-full">
-                        <button
-                            type="button"
-                            onClick={onToggle}
-                            style={{
-                                borderColor: isExpanded ? '#3b82f6' : (settings.darkMode ? '#4a4a4a' : '#e5e7eb'),
-                                backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
-                                color: settings.darkMode ? '#ffffff' : '#1f2937',
-                                boxShadow: isExpanded ? '0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none',
-                                transition: 'all 0.3s ease'
-                            }}
-                            className="border rounded-lg px-3 py-2 text-sm font-medium hover:border-blue-400 w-full text-left flex items-center justify-between gap-2"
-                        >
-                            <div className="flex items-center gap-2 min-w-0">
-                                {person ? (
-                                    <>
-                                        <div
-                                            className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-xs"
-                                            style={{ backgroundColor: '#cbb045' }}
-                                        >
-                                            {person.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                        </div>
-                                        <span className="truncate">{person}</span>
-                                    </>
-                                ) : (
-                                    <span className="italic opacity-60">Select producer</span>
-                                )}
-                            </div>
-                            <div className="chevron-rotate flex-shrink-0" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                                <ChevronDown />
-                            </div>
-                        </button>
-
-                        {isExpanded && (
-                            <div
-                                className="mt-3 rounded-lg shadow-xl border-2 p-2.5 space-y-2"
-                                style={{
-                                    borderColor: '#3b82f6',
-                                    backgroundColor: settings.darkMode ? '#2a2a2a' : '#ffffff',
-                                    animation: 'slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-                                    width: '230px'
-                                }}
-                            >
-                                <input
-                                    type="text"
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            handleAddProducer();
-                                        }
-                                    }}
-                                    placeholder="Type name & press Enter..."
-                                    className="w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-blue-500"
-                                    style={{
-                                        backgroundColor: settings.darkMode ? '#3a3a3a' : '#f9fafb',
-                                        borderColor: settings.darkMode ? '#4a4a4a' : '#d1d5db',
-                                        color: settings.darkMode ? '#ffffff' : '#1f2937'
-                                    }}
-                                    autoFocus
-                                />
-
-                                <div className="max-h-48 overflow-y-auto space-y-1">
-                                    {producers.map((name) => (
-                                        <div
-                                            key={name}
-                                            onClick={() => {
-                                                updateTask(taskId, 'person', name);
-                                                onToggle();
-                                            }}
-                                            className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
-                                            style={{
-                                                backgroundColor: person === name
-                                                    ? (settings.darkMode ? 'rgba(59, 130, 246, 0.25)' : '#eff6ff')
-                                                    : 'transparent',
-                                                color: settings.darkMode ? '#f3f4f6' : '#1f2937'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (person !== name) {
-                                                    e.currentTarget.style.backgroundColor = settings.darkMode ? '#3a3a3a' : '#f3f4f6';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (person !== name) {
-                                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                                }
-                                            }}
-                                        >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <div
-                                                    className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-xs"
-                                                    style={{ backgroundColor: '#cbb045' }}
-                                                >
-                                                    {name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                                </div>
-                                                <span className="truncate">{name}</span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => handleDeleteProducer(e, name)}
-                                                className="p-1 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                                                title={`Remove ${name}`}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
             const renderCell = (columnKey, task) => {
                 switch (columnKey) {
                     case 'task':
                         return (
                             <div className="flex items-center gap-2">
-                                <EditableCell value={task.task} taskId={task.id} field="task" />
+                                <EditableCell value={task.task} taskId={task.id} field="task" darkMode={settings.darkMode} onUpdate={updateTask} />
                             </div>
                         );
                     case 'clientName':
-                        return <EditableCell value={task.clientName} taskId={task.id} field="clientName" />;
+                        return <EditableCell value={task.clientName} taskId={task.id} field="clientName" darkMode={settings.darkMode} onUpdate={updateTask} />;
                     case 'person':
                         return (
                             <ProducerCell
                                 person={task.person}
                                 taskId={task.id}
+                                producers={producers}
+                                setProducers={setProducers}
+                                darkMode={settings.darkMode}
+                                onUpdate={updateTask}
                                 isExpanded={expandedDropdown === `${task.id}-person`}
                                 onToggle={() => setExpandedDropdown(
                                     expandedDropdown === `${task.id}-person` ? null : `${task.id}-person`
@@ -2430,6 +2588,8 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                             <StatusCell 
                                 status={task.status} 
                                 taskId={task.id}
+                                darkMode={settings.darkMode}
+                                onUpdate={updateTask}
                                 isExpanded={expandedDropdown === `${task.id}-status`}
                                 onToggle={() => setExpandedDropdown(
                                     expandedDropdown === `${task.id}-status` ? null : `${task.id}-status`
@@ -2442,6 +2602,9 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                 priority={task.priority} 
                                 taskId={task.id} 
                                 task={task}
+                                dueDateWarning={settings.dueDateWarning}
+                                darkMode={settings.darkMode}
+                                onUpdate={updateTask}
                                 isExpanded={expandedDropdown === `${task.id}-priority`}
                                 onToggle={() => setExpandedDropdown(
                                     expandedDropdown === `${task.id}-priority` ? null : `${task.id}-priority`
@@ -2453,6 +2616,8 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                             <ClientTypeCell 
                                 clientType={task.clientType} 
                                 taskId={task.id}
+                                darkMode={settings.darkMode}
+                                onUpdate={updateTask}
                                 isExpanded={expandedDropdown === `${task.id}-clientType`}
                                 onToggle={() => setExpandedDropdown(
                                     expandedDropdown === `${task.id}-clientType` ? null : `${task.id}-clientType`
@@ -2489,7 +2654,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                 type="number"
                                 value={task.actualWorkHours}
                                 onChange={(e) => updateTask(task.id, 'actualWorkHours', e.target.value)}
-                                className="border rounded px-2 py-1 text-sm hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full"
+                                className="border h-[38px] rounded px-3 text-sm font-medium hover:border-blue-400 focus:outline-none focus:border-blue-500 w-full"
                                 style={{
                                     borderColor: settings.darkMode ? '#4a4a4a' : '#e5e7eb',
                                     backgroundColor: settings.darkMode ? '#3a3a3a' : '#ffffff',
@@ -2507,7 +2672,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                     type="number"
                                     value={task.workHours}
                                     readOnly
-                                    className="border border-green-200 bg-green-50 rounded px-2 py-1 text-sm w-full text-green-700 font-semibold cursor-not-allowed"
+                                    className="border border-green-200 bg-green-50 h-[38px] rounded px-3 text-sm w-full text-green-700 font-semibold cursor-not-allowed"
                                     min="0"
                                     step="0.5"
                                     title="Auto-calculated from Total Price ÷ $65/hr"
@@ -2518,58 +2683,55 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                             </div>
                         );
                     case 'notes':
-                        return <EditableCell value={task.notes} taskId={task.id} field="notes" />;
+                        return <EditableCell value={task.notes} taskId={task.id} field="notes" darkMode={settings.darkMode} onUpdate={updateTask} multiline={true} />;
                     case 'invoiceNumber':
-                        return <EditableCell value={task.invoiceNumber} taskId={task.id} field="invoiceNumber" />;
+                        return <EditableCell value={task.invoiceNumber} taskId={task.id} field="invoiceNumber" darkMode={settings.darkMode} onUpdate={updateTask} />;
                     case 'totalPrice':
                         return (
                             <div className="font-semibold text-green-700">
-                                <EditableCell value={task.totalPrice} taskId={task.id} field="totalPrice" />
+                                <EditableCell value={task.totalPrice} taskId={task.id} field="totalPrice" darkMode={settings.darkMode} onUpdate={updateTask} />
                             </div>
                         );
                     case 'timeline':
-                        return <EditableCell value={task.timeline} taskId={task.id} field="timeline" />;
+                        return <EditableCell value={task.timeline} taskId={task.id} field="timeline" darkMode={settings.darkMode} onUpdate={updateTask} />;
                     case 'invoice':
                         return (
-                            <div className="flex items-center justify-center">
-                                <button
-                                    onClick={() => generateInvoice(task)}
-                                    className="h-9 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors inline-flex items-center justify-center gap-1.5 text-xs font-medium"
-                                    title="Generate Invoice PDF"
-                                >
-                                    📄 Invoice
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => generateInvoice(task)}
+                                style={{ backgroundColor: '#53df98' }}
+                                className="h-[38px] px-3 text-gray-800 rounded text-sm font-medium hover:opacity-90 transition-opacity w-full flex items-center justify-center gap-1.5"
+                                title="Generate Invoice PDF"
+                            >
+                                <span>Invoice</span>
+                            </button>
                         );
                     case 'metrics':
                         return (
-                            <div className="flex items-center justify-center">
-                                <button
-                                    onClick={() => setSelectedTaskForMetrics(task)}
-                                    className="h-9 w-9 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors inline-flex items-center justify-center"
-                                    title="View metrics"
-                                >
-                                    <BarChart size={16} />
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setSelectedTaskForMetrics(task)}
+                                style={{ backgroundColor: '#81b6e3' }}
+                                className="h-[38px] px-3 text-white rounded text-sm font-medium hover:opacity-90 transition-opacity w-full flex items-center justify-center"
+                                title="View metrics"
+                            >
+                                <BarChart size={16} />
+                            </button>
                         );
                     case 'drag':
                         return (
-                            <div className="flex items-center justify-center">
+                            <div className="h-[38px] flex items-center justify-center">
                                 <GripVertical size={16} className="text-gray-400 cursor-move" />
                             </div>
                         );
                     case 'actions':
                         return (
-                            <div className="flex items-center justify-center">
-                                <button
-                                    onClick={() => confirmDelete(task)}
-                                    className="h-9 w-9 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors inline-flex items-center justify-center"
-                                    title="Delete task"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => confirmDelete(task)}
+                                style={{ backgroundColor: '#e4732f' }}
+                                className="h-[38px] px-3 text-white rounded text-sm font-medium hover:opacity-90 transition-opacity w-full flex items-center justify-center"
+                                title="Delete task"
+                            >
+                                <Trash2 size={16} />
+                            </button>
                         );
                     default:
                         return null;
@@ -2604,7 +2766,12 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                             onClick={() => toggleGroup(groupId)}
                             className="hover:bg-white/20 rounded p-1 transition-colors"
                         >
-                            {expandedGroups[groupId] ? <ChevronDown /> : <ChevronRight />}
+                            <div
+                                className="chevron-rotate"
+                                style={{ transform: expandedGroups[groupId] ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+                            >
+                                <ChevronDown />
+                            </div>
                         </button>
                         <span className="font-semibold text-lg">{title}</span>
                         <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">{count} items</span>
@@ -2840,11 +3007,12 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                             bgColor={groupData.bgColor}
                                         />
                                         
-                                        {expandedGroups[groupId] && (
-                                            <div
-                                                className="overflow-auto pb-2 smooth-scroll-container"
-                                                style={{ maxHeight: '72vh' }}
-                                            >
+                                        <div className={`group-accordion ${expandedGroups[groupId] ? 'is-open' : ''}`}>
+                                            <div className="group-accordion-inner">
+                                                <div
+                                                    className="overflow-auto pb-2 smooth-scroll-container"
+                                                    style={{ maxHeight: '72vh' }}
+                                                >
                                                 <table className="min-w-full border-separate border-spacing-0" style={{ width: '100%', tableLayout: 'auto' }}>
                                                     <thead style={{ position: 'sticky', top: 0, zIndex: 30 }}>
                                                         <tr style={{ 
@@ -2939,11 +3107,13 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                                                     style={{
                                                                         backgroundColor: currentRowBg,
                                                                         color: textColor,
-                                                                        transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                                                        transitionDelay: expandedGroups[groupId]
+                                                                            ? `${Math.min(index * 120, 960)}ms`
+                                                                            : `${Math.min((groupTasks.length - 1 - index) * 100, 800)}ms`
                                                                     }}
                                                                     onMouseEnter={(e) => !hasExpanded && (e.currentTarget.style.backgroundColor = hoverBg)}
                                                                     onMouseLeave={(e) => !hasExpanded && (e.currentTarget.style.backgroundColor = currentRowBg)}
-                                                                    className={`border-b cursor-move ${
+                                                                    className={`cascade-row border-b cursor-move ${
                                                                         dragOverTask?.id === task.id ? 'border-t-4 border-t-blue-500' : ''
                                                                     } ${
                                                                         draggedTask?.id === task.id ? 'opacity-50' : ''
@@ -2956,8 +3126,13 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                                                 {columnOrder.map((columnKey) => (
                                                                     <td 
                                                                         key={columnKey} 
-                                                                        style={{ minWidth: `${columnWidths[columnKey]}px`, color: textColor }}
-                                                                        className={`px-4 py-3 align-top ${(columnKey === 'actions' || columnKey === 'metrics') ? 'text-center' : ''}`}
+                                                                        style={{
+                                                                            minWidth: `${columnWidths[columnKey]}px`,
+                                                                            maxWidth: columnKey === 'notes' ? `${columnWidths[columnKey]}px` : undefined,
+                                                                            color: textColor,
+                                                                            overflow: 'visible'
+                                                                        }}
+                                                                        className={`px-4 py-3 align-top relative ${(columnKey === 'actions' || columnKey === 'metrics') ? 'text-center' : ''}`}
                                                                     >
                                                                         {renderCell(columnKey, task)}
                                                                     </td>
@@ -2967,8 +3142,9 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                                         })}
                                                     </tbody>
                                                 </table>
+                                                </div>
                                             </div>
-                                        )}
+                                        </div>
                                         
                                         {groupId === 'group2' && (
                                             <div style={{ background: `linear-gradient(135deg, ${theme.secondary}15 0%, ${theme.accent}15 100%)` }} className="border-t-4 px-8 py-8" style={{ borderTopColor: theme.primary }}>
