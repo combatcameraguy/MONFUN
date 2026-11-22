@@ -21,6 +21,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
+        /* Custom Large Scrollbars for Easy Mouse Grabbing */
+        ::-webkit-scrollbar {
+            width: 22px;  /* Wider vertical scrollbar */
+            height: 26px; /* Much taller horizontal scrollbar */
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(156, 163, 175, 0.2);
+            border-radius: 12px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 12px;
+            border: 4px solid transparent;
+            background-clip: content-box;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+            border: 3px solid transparent;
+            background-clip: content-box;
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
         /* Remove number input arrows */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
@@ -2346,6 +2374,13 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                         >
                                             {showDashboardTotal ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
+                                        <button 
+                                            onClick={() => addTask('group1')}
+                                            className="py-1.5 px-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2 text-xs font-semibold shadow-md hover:shadow-lg"
+                                        >
+                                            <Plus size={14} />
+                                            Add new item
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -2405,7 +2440,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                         />
                                         
                                         {expandedGroups[groupId] && (
-                                            <div className="overflow-x-auto">
+                                            <div className="overflow-x-auto pb-2">
                                                 <table className="min-w-full" style={{ width: '100%', tableLayout: 'auto' }}>
                                                     <thead>
                                                         <tr style={{ 
@@ -2522,18 +2557,6 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                                         })}
                                                     </tbody>
                                                 </table>
-                                            </div>
-                                        )}
-                                        
-                                        {expandedGroups[groupId] && groupId === 'group1' && (
-                                            <div className="px-4 py-2">
-                                                <button 
-                                                    onClick={() => addTask(groupId)}
-                                                    className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-semibold shadow-md hover:shadow-lg"
-                                                >
-                                                    <Plus size={16} />
-                                                    Add new item
-                                                </button>
                                             </div>
                                         )}
                                         
