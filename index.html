@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>COMCAM Dashboard v4.8 - Rectangular Status Boxes</title>
+    <title>COMCAM Dashboard v4.9 - Rectangular Status Boxes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -111,7 +111,7 @@
             color: inherit;
         }
         
-        /* 2-Second Drop-Down Accordion: Floats Over Column Dividers Without Stretching Column Width */
+        /* 1.5-Second Drop-Down Accordion: Floats Over Column Dividers Without Stretching Column Width */
         .smooth-accordion {
             display: block !important;
             position: relative !important;
@@ -124,9 +124,9 @@
             z-index: 80;
             will-change: height, opacity, margin-top;
             transition:
-                height 2s cubic-bezier(0.22, 1, 0.36, 1),
-                opacity 1.6s cubic-bezier(0.22, 1, 0.36, 1),
-                margin-top 2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+                height 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+                margin-top 1.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
         }
 
         .smooth-accordion.is-open {
@@ -142,8 +142,8 @@
             left: 0 !important;
             width: max-content !important;
             overflow: visible !important;
-            transform: translateY(-14px);
-            transition: transform 2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+            transform: translateY(-12px);
+            transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
         }
 
         .smooth-accordion.is-open .smooth-accordion-inner {
@@ -153,10 +153,10 @@
         /* Staggered Cascade for Dropdown Items & Calendar Days */
         .smooth-accordion .cascade-item {
             opacity: 0;
-            transform: translateY(-16px);
+            transform: translateY(-14px);
             transition:
-                opacity 1.6s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 2s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 1.5s cubic-bezier(0.22, 1, 0.36, 1),
                 box-shadow 0.2s ease,
                 background-color 0.2s ease;
         }
@@ -166,15 +166,15 @@
             transform: translateY(0);
         }
 
-        /* 2-Second Group Accordion (INBOX / COMPLETED) with Cascade */
+        /* 1.5-Second Group Accordion (INBOX / COMPLETED) with Cascade */
         .group-accordion {
             display: grid;
             grid-template-rows: 0fr;
             opacity: 0;
             pointer-events: none;
             transition:
-                grid-template-rows 2s cubic-bezier(0.22, 1, 0.36, 1),
-                opacity 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+                grid-template-rows 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .group-accordion.is-open {
@@ -188,15 +188,15 @@
             min-height: 0;
         }
 
-        /* 2-Second Cascading Row Animation Inside INBOX & COMPLETED */
+        /* 1.5-Second Cascading Row Animation Inside INBOX & COMPLETED */
         .cascade-row {
             opacity: 0;
-            transform: translateY(-16px);
+            transform: translateY(-14px);
             transition:
-                opacity 1.6s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 2s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 1.5s cubic-bezier(0.22, 1, 0.36, 1),
                 background-color 0.4s ease,
-                padding 2s cubic-bezier(0.22, 1, 0.36, 1);
+                padding 1.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .group-accordion.is-open .cascade-row {
@@ -220,9 +220,9 @@
             width: 100%;
         }
 
-        /* 2-Second Smooth Chevron Rotation */
+        /* 1.5-Second Smooth Chevron Rotation */
         .chevron-rotate {
-            transition: transform 2s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
     </style>
 </head>
@@ -406,8 +406,8 @@
                                                 color: isSelected ? '#ffffff' : darkMode ? '#ffffff' : '#000000',
                                                 border: isSelected ? '2px solid #2563eb' : '1px solid ' + (darkMode ? '#4a4a4a' : '#e5e7eb'),
                                                 transitionDelay: isExpanded
-                                                    ? `${Math.min(rowIndex * 110, 660)}ms`
-                                                    : `${Math.min((5 - rowIndex) * 90, 540)}ms`
+                                                    ? `${Math.min(rowIndex * 75, 450)}ms`
+                                                    : `${Math.min((5 - rowIndex) * 60, 360)}ms`
                                             }}
                                         >
                                             {day}
@@ -488,8 +488,8 @@
                                         style={{
                                             backgroundColor: statusColors[option],
                                             transitionDelay: isExpanded
-                                                ? `${Math.min(index * 130, 650)}ms`
-                                                : `${Math.min((options.length - 1 - index) * 110, 550)}ms`
+                                                ? `${Math.min(index * 90, 450)}ms`
+                                                : `${Math.min((options.length - 1 - index) * 75, 375)}ms`
                                         }}
                                         className="cascade-item text-white px-4 py-2.5 w-full text-left text-sm font-semibold rounded-lg hover:scale-[1.02] hover:shadow-md"
                                     >
@@ -557,8 +557,8 @@
                                         style={{
                                             backgroundColor: priorityColors[option],
                                             transitionDelay: isExpanded
-                                                ? `${index * 160}ms`
-                                                : `${(options.length - 1 - index) * 140}ms`
+                                                ? `${index * 110}ms`
+                                                : `${(options.length - 1 - index) * 95}ms`
                                         }}
                                         className="cascade-item text-gray-800 px-4 py-2.5 w-full text-left text-sm font-bold rounded-lg hover:scale-[1.02] hover:shadow-md"
                                     >
@@ -621,8 +621,8 @@
                                         style={{
                                             backgroundColor: clientTypeColors[option],
                                             transitionDelay: isExpanded
-                                                ? `${Math.min(index * 110, 660)}ms`
-                                                : `${Math.min((options.length - 1 - index) * 90, 540)}ms`
+                                                ? `${Math.min(index * 75, 450)}ms`
+                                                : `${Math.min((options.length - 1 - index) * 60, 360)}ms`
                                         }}
                                         className="cascade-item text-gray-800 px-4 py-2.5 w-full text-left text-sm font-semibold rounded-lg hover:scale-[1.02] hover:shadow-md"
                                     >
@@ -718,7 +718,7 @@
                                         backgroundColor: darkMode ? '#3a3a3a' : '#f9fafb',
                                         borderColor: darkMode ? '#4a4a4a' : '#d1d5db',
                                         color: darkMode ? '#ffffff' : '#1f2937',
-                                        transitionDelay: isExpanded ? '0ms' : `${Math.min(producers.length * 100, 600)}ms`
+                                        transitionDelay: isExpanded ? '0ms' : `${Math.min(producers.length * 70, 420)}ms`
                                     }}
                                 />
 
@@ -737,8 +737,8 @@
                                                     : 'transparent',
                                                 color: darkMode ? '#f3f4f6' : '#1f2937',
                                                 transitionDelay: isExpanded
-                                                    ? `${Math.min((index + 1) * 110, 660)}ms`
-                                                    : `${Math.min((producers.length - 1 - index) * 90, 540)}ms`
+                                                    ? `${Math.min((index + 1) * 75, 450)}ms`
+                                                    : `${Math.min((producers.length - 1 - index) * 60, 360)}ms`
                                             }}
                                             onMouseEnter={(e) => {
                                                 if (person !== name) {
@@ -2890,7 +2890,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                         color: theme.textSecondary
                                     }}
                                 >
-                                    v4.8
+                                    v4.9
                                 </span>
 
                                 {user && (
@@ -3108,8 +3108,8 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                                                         backgroundColor: currentRowBg,
                                                                         color: textColor,
                                                                         transitionDelay: expandedGroups[groupId]
-                                                                            ? `${Math.min(index * 120, 960)}ms`
-                                                                            : `${Math.min((groupTasks.length - 1 - index) * 100, 800)}ms`
+                                                                            ? `${Math.min(index * 85, 595)}ms`
+                                                                            : `${Math.min((groupTasks.length - 1 - index) * 70, 490)}ms`
                                                                     }}
                                                                     onMouseEnter={(e) => !hasExpanded && (e.currentTarget.style.backgroundColor = hoverBg)}
                                                                     onMouseLeave={(e) => !hasExpanded && (e.currentTarget.style.backgroundColor = currentRowBg)}
