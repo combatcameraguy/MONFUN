@@ -180,6 +180,18 @@
         const EyeOff = ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>;
         const Lock = ({ size = 64 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
 
+        // Generate Invoice Number in YYMMDD-HHMM format (e.g., 251028-1901)
+        const generateInvoiceNumber = (dateInput = new Date()) => {
+            const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+            const validDate = isNaN(date.getTime()) ? new Date() : date;
+            const year = String(validDate.getFullYear()).slice(-2);
+            const month = String(validDate.getMonth() + 1).padStart(2, '0');
+            const day = String(validDate.getDate()).padStart(2, '0');
+            const hours = String(validDate.getHours()).padStart(2, '0');
+            const minutes = String(validDate.getMinutes()).padStart(2, '0');
+            return `${year}${month}${day}-${hours}${minutes}`;
+        };
+
         // ========== INLINE EXPANDING CALENDAR COMPONENT ==========
         const InlineCalendar = ({ value, onChange, darkMode, onToggle, isExpanded }) => {
             const [currentMonth, setCurrentMonth] = useState(new Date(value || new Date()));
@@ -585,7 +597,7 @@
                     actualWorkHours: '10',
                     workHours: '8',
                     notes: 'Need to review with marketing team',
-                    invoiceNumber: 'INV-1001',
+                    invoiceNumber: '251020-0930',
                     totalPrice: '2500',
                     timeline: '3 days'
                 },
@@ -603,7 +615,7 @@
                     actualWorkHours: '5',
                     workHours: '4',
                     notes: 'All materials approved',
-                    invoiceNumber: 'INV-1002',
+                    invoiceNumber: '251018-1415',
                     totalPrice: '1200',
                     timeline: '2 days'
                 },
@@ -621,7 +633,7 @@
                     actualWorkHours: '14',
                     workHours: '12',
                     notes: 'Waiting for technical specs',
-                    invoiceNumber: 'INV-1003',
+                    invoiceNumber: '251022-1105',
                     totalPrice: '3200',
                     timeline: '5 days'
                 },
@@ -639,7 +651,7 @@
                     actualWorkHours: '7',
                     workHours: '6',
                     notes: 'Slides ready for review',
-                    invoiceNumber: 'INV-1004',
+                    invoiceNumber: '251019-1645',
                     totalPrice: '1800',
                     timeline: '1 day'
                 },
@@ -657,7 +669,7 @@
                     actualWorkHours: '20',
                     workHours: '16',
                     notes: 'Need to schedule downtime window',
-                    invoiceNumber: 'INV-1005',
+                    invoiceNumber: '251023-0820',
                     totalPrice: '4500',
                     timeline: '7 days'
                 }
@@ -884,6 +896,7 @@
             };
 
             const addTask = (groupId) => {
+                const now = new Date();
                 const newTask = {
                     id: Math.max(...tasks.map(t => t.id), 0) + 1,
                     group: groupId,
@@ -893,12 +906,12 @@
                     status: 'Not started',
                     priority: 'Standard',
                     clientType: 'Commercial/Local Business',
-                    requestDate: new Date().toISOString().split('T')[0],
+                    requestDate: now.toISOString().split('T')[0],
                     dueDate: '',
                     actualWorkHours: '0',
                     workHours: '0',
                     notes: '',
-                    invoiceNumber: '',
+                    invoiceNumber: generateInvoiceNumber(now),
                     totalPrice: '0',
                     timeline: ''
                 };
@@ -1095,6 +1108,13 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
             
             // Generate Invoice PDF
             const generateInvoice = (task) => {
+                // Ensure task has a YYMMDD-HHMM invoice number and persist it on the dashboard
+                let invoiceNum = (task.invoiceNumber || '').trim();
+                if (!invoiceNum) {
+                    invoiceNum = generateInvoiceNumber(new Date());
+                    updateTask(task.id, 'invoiceNumber', invoiceNum);
+                }
+
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({
                     orientation: 'portrait',
@@ -1112,6 +1132,70 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 const darkColor = [31, 41, 55];      // #1f2937
                 const accentColor = [216, 151, 60];  // #D8973C
                 const grayColor = [107, 114, 128];   // #6b7280
+
+                // Calculate values & adjustments first
+                const hours = parseFloat(task.workHours) || 0;
+                const finalAmount = parseFloat(task.totalPrice) || 0;
+                
+                let hasDiscount = false;
+                let hasSurcharge = false;
+                let adjustmentPercent = 0;
+                let baseAmount = finalAmount;
+                let adjustmentAmount = 0;
+                let baseRate = 0;
+                let adjustmentLabel = '';
+                
+                if (task.clientType) {
+                    if (task.clientType.includes('Military') || task.clientType.includes('Veteran')) {
+                        hasDiscount = true;
+                        adjustmentPercent = 40;
+                        adjustmentLabel = 'Military/Veteran Discount';
+                        baseAmount = finalAmount / (1 - adjustmentPercent / 100);
+                        adjustmentAmount = baseAmount - finalAmount;
+                        baseRate = hours > 0 ? baseAmount / hours : 0;
+                    }
+                    else if (task.clientType.includes('Education')) {
+                        hasDiscount = true;
+                        adjustmentPercent = 15;
+                        adjustmentLabel = 'Education Discount';
+                        baseAmount = finalAmount / (1 - adjustmentPercent / 100);
+                        adjustmentAmount = baseAmount - finalAmount;
+                        baseRate = hours > 0 ? baseAmount / hours : 0;
+                    }
+                    else if (task.clientType.includes('Out of State')) {
+                        hasSurcharge = true;
+                        adjustmentPercent = 30;
+                        adjustmentLabel = 'Out of State Service Fee';
+                        baseAmount = finalAmount / (1 + adjustmentPercent / 100);
+                        adjustmentAmount = finalAmount - baseAmount;
+                        baseRate = hours > 0 ? baseAmount / hours : 0;
+                    }
+                    else if (task.clientType.includes('State Government')) {
+                        hasSurcharge = true;
+                        adjustmentPercent = 20;
+                        adjustmentLabel = 'Government Contract Fee';
+                        baseAmount = finalAmount / (1 + adjustmentPercent / 100);
+                        adjustmentAmount = finalAmount - baseAmount;
+                        baseRate = hours > 0 ? baseAmount / hours : 0;
+                    }
+                    else if (task.clientType.includes('Federal Government')) {
+                        hasSurcharge = true;
+                        adjustmentPercent = 50;
+                        adjustmentLabel = 'Federal Contract Fee';
+                        baseAmount = finalAmount / (1 + adjustmentPercent / 100);
+                        adjustmentAmount = finalAmount - baseAmount;
+                        baseRate = hours > 0 ? baseAmount / hours : 0;
+                    }
+                    else if (task.clientType.includes('Fortune 500')) {
+                        baseRate = hours > 0 ? finalAmount / hours : 0;
+                        baseAmount = finalAmount;
+                    }
+                }
+                
+                if (!hasDiscount && !hasSurcharge && hours > 0) {
+                    baseRate = finalAmount / hours;
+                    baseAmount = finalAmount;
+                }
                 
                 // COMCAM Company Info
                 doc.setTextColor(...darkColor);
@@ -1136,7 +1220,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 doc.setTextColor(...darkColor);
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
-                doc.text(`Invoice #: ${task.invoiceNumber || 'N/A'}`, pageWidth - margin, margin + 0.65, { align: 'right' });
+                doc.text(`Invoice #: ${invoiceNum}`, pageWidth - margin, margin + 0.65, { align: 'right' });
                 doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin, margin + 0.8, { align: 'right' });
                 doc.text(`Due Date: ${task.dueDate || new Date().toLocaleDateString()}`, pageWidth - margin, margin + 0.95, { align: 'right' });
                 
@@ -1178,78 +1262,6 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 doc.setDrawColor(...grayColor);
                 doc.setLineWidth(0.01);
                 doc.line(margin, yPos, pageWidth - margin, yPos);
-                
-                // Calculate values
-                const hours = parseFloat(task.workHours) || 0;
-                const finalAmount = parseFloat(task.totalPrice) || 0;
-                
-                // Determine if there's a discount or surcharge
-                let hasDiscount = false;
-                let hasSurcharge = false;
-                let adjustmentPercent = 0;
-                let baseAmount = finalAmount;
-                let adjustmentAmount = 0;
-                let baseRate = 0;
-                let adjustmentLabel = '';
-                
-                if (task.clientType) {
-                    // Check for discounts (price reductions) - ALWAYS SHOW
-                    if (task.clientType.includes('Military') || task.clientType.includes('Veteran')) {
-                        hasDiscount = true;
-                        adjustmentPercent = 40;
-                        adjustmentLabel = 'Military/Veteran Discount';
-                        // Back-calculate the original amount
-                        baseAmount = finalAmount / (1 - adjustmentPercent / 100);
-                        adjustmentAmount = baseAmount - finalAmount;
-                        baseRate = hours > 0 ? baseAmount / hours : 0;
-                    }
-                    else if (task.clientType.includes('Education')) {
-                        hasDiscount = true;
-                        adjustmentPercent = 15;
-                        adjustmentLabel = 'Education Discount';
-                        // Back-calculate the original amount
-                        baseAmount = finalAmount / (1 - adjustmentPercent / 100);
-                        adjustmentAmount = baseAmount - finalAmount;
-                        baseRate = hours > 0 ? baseAmount / hours : 0;
-                    }
-                    // Check for surcharges - ONLY SHOW for Out of State and Government
-                    else if (task.clientType.includes('Out of State')) {
-                        hasSurcharge = true;
-                        adjustmentPercent = 30;
-                        adjustmentLabel = 'Out of State Service Fee';
-                        // Back-calculate the base amount
-                        baseAmount = finalAmount / (1 + adjustmentPercent / 100);
-                        adjustmentAmount = finalAmount - baseAmount;
-                        baseRate = hours > 0 ? baseAmount / hours : 0;
-                    }
-                    else if (task.clientType.includes('State Government')) {
-                        hasSurcharge = true;
-                        adjustmentPercent = 20;
-                        adjustmentLabel = 'Government Contract Fee';
-                        baseAmount = finalAmount / (1 + adjustmentPercent / 100);
-                        adjustmentAmount = finalAmount - baseAmount;
-                        baseRate = hours > 0 ? baseAmount / hours : 0;
-                    }
-                    else if (task.clientType.includes('Federal Government')) {
-                        hasSurcharge = true;
-                        adjustmentPercent = 50;
-                        adjustmentLabel = 'Federal Contract Fee';
-                        baseAmount = finalAmount / (1 + adjustmentPercent / 100);
-                        adjustmentAmount = finalAmount - baseAmount;
-                        baseRate = hours > 0 ? baseAmount / hours : 0;
-                    }
-                    // Fortune 500 - Don't show breakdown, just use final amount
-                    else if (task.clientType.includes('Fortune 500')) {
-                        // Price already includes markup, just use it directly
-                        baseRate = hours > 0 ? finalAmount / hours : 0;
-                        baseAmount = finalAmount;
-                    }
-                }
-                
-                if (!hasDiscount && !hasSurcharge && hours > 0) {
-                    baseRate = finalAmount / hours;
-                    baseAmount = finalAmount;
-                }
                 
                 // Line Item
                 yPos += 0.25;
@@ -1345,7 +1357,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 doc.text(footerText, (pageWidth - footerWidth) / 2, pageHeight - 0.5);
                 
                 // Save PDF
-                const filename = `Invoice_${task.invoiceNumber || task.id}_${task.clientName?.replace(/[^a-zA-Z0-9]/g, '_') || 'Client'}.pdf`;
+                const filename = `Invoice_${invoiceNum}_${task.clientName?.replace(/[^a-zA-Z0-9]/g, '_') || 'Client'}.pdf`;
                 doc.save(filename);
             };
             
@@ -1408,6 +1420,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
             };
 
             const importRequest = async (request) => {
+                const invoiceNum = request.invoiceNumber || generateInvoiceNumber(request.submittedAt ? new Date(request.submittedAt) : new Date());
                 // Create a new task from the request
                 const newTask = {
                     id: Math.max(...tasks.map(t => t.id), 0) + 1,
@@ -1423,7 +1436,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                     actualWorkHours: String(request.actualWorkHours || request.workHours || '0'),
                     workHours: String(request.workHours || '0'),
                     notes: request.notes || request.projectDescription || '',
-                    invoiceNumber: request.invoiceNumber || '',
+                    invoiceNumber: invoiceNum,
                     totalPrice: String(request.totalPrice || '0'),
                     timeline: String(request.timeline || '')
                 };
@@ -1432,7 +1445,10 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                 
                 // Mark as read in Firebase
                 try {
-                    await database.ref(`requests/${request.id}/read`).set(true);
+                    await database.ref(`requests/${request.id}`).update({
+                        read: true,
+                        invoiceNumber: invoiceNum
+                    });
                 } catch (error) {
                     console.error('Error marking request as read in Firebase:', error);
                 }
@@ -1630,7 +1646,7 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                 actualWorkHours: loadedData.actualWorkHours || loadedData.workHours || '0',
                                 workHours: loadedData.workHours || '0',
                                 notes: loadedData.notes || '',
-                                invoiceNumber: loadedData.invoiceNumber || '',
+                                invoiceNumber: loadedData.invoiceNumber || generateInvoiceNumber(new Date()),
                                 totalPrice: loadedData.totalPrice || '0',
                                 timeline: loadedData.timeline || ''
                             };
@@ -1850,6 +1866,10 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
             const EditableCell = ({ value, taskId, field }) => {
                 const [isEditing, setIsEditing] = useState(false);
                 const [tempValue, setTempValue] = useState(value);
+
+                useEffect(() => {
+                    setTempValue(value);
+                }, [value]);
 
                 const handleSave = () => {
                     updateTask(taskId, field, tempValue);
@@ -3453,11 +3473,9 @@ const filename = `COMCAM-BACKUP-${year}${month}${day}_${hours}${minutes}.json`;
                                                                     {request.timeline} timeline
                                                                 </span>
                                                             )}
-                                                            {request.invoiceNumber && (
-                                                                <span className="px-2 py-1 rounded bg-green-100 text-green-800">
-                                                                    {request.invoiceNumber}
-                                                                </span>
-                                                            )}
+                                                            <span className="px-2 py-1 rounded bg-green-100 text-green-800">
+                                                                #{request.invoiceNumber || generateInvoiceNumber(request.submittedAt ? new Date(request.submittedAt) : new Date())}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 ))}
